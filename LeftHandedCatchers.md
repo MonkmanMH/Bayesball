@@ -70,7 +70,7 @@ A mosaic plot represents the contents of the summary tables in a graphic manner.
 
 ```{r, fig.width=7, fig.height=6}
 # plot
-mosaic(throwPOS, shade=TRUE)
+mosaic(throwPOS, highlighting = "throws", highlighting_fill=c("darkgrey", "white"))
 ```
 
 ## Conclusion
@@ -82,8 +82,8 @@ As J.G. Preston puts it in the blog post ["Left-handed throwing second basemen, 
 > left-handers are, in practice, restricted to five of them.
 
 
-My github gist (in markdown) with the code is here:
-[need URL here]
+My github file for this entry in Markdown is here:
+[https://github.com/MonkmanMH/Bayesball/blob/master/LeftHandedCatchers.md]
 
 -30-
 
