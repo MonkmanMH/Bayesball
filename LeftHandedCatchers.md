@@ -33,31 +33,72 @@ You may note that for the merging of the two tables, I used the new [dplyr packa
 ```{r}
 # load the required packages
 require(Lahman)
-require(vcd)
 require(dplyr)
-require(gmodels)
 #
-# create a new data table that merges the Fielding and Master tables, based on the common variable "playerID"
-MasterFielding <- inner_join(Fielding, Master, by="playerID")
-# select only those seasons since 1945 and 
-# omit the records that are OF summary (i.e. leave the RF, CF, and LF)
-MasterFielding <- subset(MasterFielding, POS != "OF" & yearID > "1944")
-
 ```
-### Cross-tab Tables
+The first step is to create a new data table that merges the Fielding and Master tables, based on the common variable "playerID". This new table has one row for each player, by position and season; 
+we use the dim function to show the dimensions of the table.
 
-Prepare a simple contingency / cross-tab table based on position (POS) and throwing hand (throws).
+Then, select only those seasons since 1954 (the first year that the Lahman database has comprehensive outfield playing time split by position) and omit the records that are Designated Hitter (DH) and omit the summary of outfield positions (OF) (i.e. leave the RF, CF, and LF).
+
 
 ```{r}
-throwPOS <- with(MasterFielding, table(POS, throws))
+MasterFielding <- inner_join(Fielding, Master, by="playerID")
+dim(MasterFielding)
+#
+MasterFielding <- filter(MasterFielding, POS != "OF" & POS != "DH" & yearID > "1953")
+dim(MasterFielding)
+```
+
+This table needs to be summarized one step further -- a single row for each player, counting how many games played at each position.
+
+```{r}
+Player_games <- MasterFielding %.%
+  group_by(playerID, nameFirst, nameLast, POS, throws) %.%
+  summarise(gamecount = sum(G)) %.%
+  arrange(desc(gamecount)) 
+dim(Player_games)
+head(Player_games)
+
+```
+
+This table starts to show some interesting records -- Brooks Robinson leads the way with 2,870 games played at third base.  And the fact that Derek Jeter, at the end of the 2012 season, was closing in on Omar Vizquel's career record for games played as a shortstop.
+
+### Cross-tab Tables
+
+The next step is to prepare a simple cross-tab table (also known as contingency or pivot tables) showing the number of players cross-tabulated by position (POS) and throwing hand (throws). 
+
+Here, I'll demonstrate two ways to do this: first with dplyr's "group_by" and "summarise" (with a bit of help from reshape2), and then the "table" function in gmodels.
+
+```{r}
+# first method - dplyr
+Player_POS <- Player_games %.%
+  group_by(POS, throws) %.%
+  summarise(playercount = length(gamecount))
+Player_POS
+```
+
+To transform this long-form table into a traditional cross-tab shape we can use the "dcast" function in reshape2.
+
+```{r}
+require(reshape2)
+dcast(Player_POS, POS ~ throws, value.var = "playercount")
+```
+
+A second method to get the same result is to use the "table" function in the gmodels package.
+
+```{r}
+require(gmodels)
+throwPOS <- with(Player_games, table(POS, throws))
 throwPOS
 ```
 
-A more elaborate table can be created using the gmodels package. In this case, we'll
-use the CrossTable function to generate a table with row percentages.
+A more elaborate table can be created using gmodels package. In this case, we'll 
+use the CrossTable function to generate a table with row percentages.  You'll note
+that the format is set to SPSS, so the table output resembles that software's display style.
 
 ```{r}
-CrossTable(MasterFielding$POS, MasterFielding$throws, 
+CrossTable(Player_games$POS, Player_games$throws, 
            digits=2, format="SPSS",
            prop.r=TRUE, prop.c=FALSE, prop.t=FALSE, prop.chisq=FALSE,  # keeping the row proportions
            chisq=TRUE)                                                 # adding the ChiSquare statistic
@@ -65,21 +106,33 @@ CrossTable(MasterFielding$POS, MasterFielding$throws,
 
 ### Mosaic Plot
 
-A mosaic plot represents the contents of the summary tables in a graphic manner.
+A mosaic plot is an effective way to graphically represent the contents of the summary tables. Note that the length (left to right) dimension of each bar is constant, comparing proportions, while the height of the bar (top to bottom) varies depending on the absolute number of cases.  The mosaic plot function is in the vcd package.
 
 ```{r, fig.width=7, fig.height=6}
-# plot
+require(vcd)
 mosaic(throwPOS, highlighting = "throws", highlighting_fill=c("darkgrey", "white"))
 ```
 
 ### Conclusion
 
-The clear result is that it's not just catchers that are overwhelmingly right-handed throwers, it's also infielders (except first base).  There have been very few southpaws playing second and third base -- and there have been absolutely no left-handed throwing shortstops in this period.
+The clear result is that it’s not just catchers that are overwhelmingly right-handed throwers, it’s also infielders (except first base). There have been very few southpaws playing second and third base – and there have been absolutely no left-handed throwing shortstops in this period.
 
 As J.G. Preston puts it in the blog post ["Left-handed throwing second basemen, shortstops and third basemen"](http://prestonjg.wordpress.com/2009/09/06/left-handed-throwing-second-basemen-shortstops-and-third-basemen/),
 
 > While right-handed throwers can be found at any of the nine positions on a baseball field, 
 > left-handers are, in practice, restricted to five of them.
+
+So who are these left-handed oddities?  Using the filter function, it's easy to find out:
+
+```{r}
+# catchers
+filter(Player_games, POS == "C", throws == "L")
+# second base
+filter(Player_games, POS == "2B", throws == "L")
+# third base
+filter(Player_games, POS == "3B", throws == "L")
+
+```
 
 
 My github file for this entry in Markdown is here:
