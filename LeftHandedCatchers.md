@@ -32,8 +32,8 @@ You may note that for the merging of the two tables, I used the new [dplyr packa
 
 ```{r}
 # load the required packages
-require(Lahman)
-require(dplyr)
+library(Lahman)
+library(dplyr)
 #
 ```
 The first step is to create a new data table that merges the Fielding and Master tables, based on the common variable "playerID". This new table has one row for each player, by position and season; 
@@ -81,14 +81,14 @@ Player_POS
 To transform this long-form table into a traditional cross-tab shape we can use the "dcast" function in reshape2.
 
 ```{r}
-require(reshape2)
+library(reshape2)
 dcast(Player_POS, POS ~ throws, value.var = "playercount")
 ```
 
 A second method to get the same result is to use the "table" function in the gmodels package.
 
 ```{r}
-require(gmodels)
+library(gmodels)
 throwPOS <- with(Player_games, table(POS, throws))
 throwPOS
 ```
@@ -109,7 +109,7 @@ CrossTable(Player_games$POS, Player_games$throws,
 A mosaic plot is an effective way to graphically represent the contents of the summary tables. Note that the length (left to right) dimension of each bar is constant, comparing proportions, while the height of the bar (top to bottom) varies depending on the absolute number of cases.  The mosaic plot function is in the vcd package.
 
 ```{r, fig.width=7, fig.height=6}
-require(vcd)
+library(vcd)
 mosaic(throwPOS, highlighting = "throws", highlighting_fill=c("darkgrey", "white"))
 ```
 
