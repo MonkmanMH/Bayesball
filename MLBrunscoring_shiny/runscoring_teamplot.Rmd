@@ -1,0 +1,16 @@
+---
+title: "MLBrunscoring_teamplot"
+author: "Martin Monkman"
+date: "Sunday, January 11, 2015"
+output: html_document
+---
+
+#### Interpreting the plot
+
+Each team's runs scored and runs allowed is compared to the league average for that season.
+
+The league average is represented by 100 (on the y-axis); a value above 100 indicates that the team scored (or was scored against) at a rate higher than the league average, and a value below 100 indicates a team rate below the league average.
+
+For example, if a team's runs scored value is 120, they scored at a rate 20% higher than the league average for that season. If the runs allowed value is 85, they gave up runs at a rate 15% lower than the league average -- a very good thing.
+
+Winning teams score runs more than they allow runs. This chart shows the relationship for each major league franchise, and the data table below presents the details.
