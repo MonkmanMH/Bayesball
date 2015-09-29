@@ -1,0 +1,138 @@
+Fair weather fans, redux
+========================================================
+
+Or, A little larger small sample 
+----------------------------------
+
+On August 11 the <a href="http://harbourcats.com/home/" target="_blank">Victoria HarbourCats</a> closed out their 2013 <a href="http://www.wccbl.com/" target="_blank">West Coast League</a> season with a 4-3 win over the <a href="http://www.bellinghambells.com/home/" target="_blank">Bellingham Bells</a>. 
+
+In an <a href="http://bayesball.blogspot.ca/2013/07/fair-weather-fans-r-scatter-plot-matrix.html" target="_blank">earlier post</a>, written mid-way through the season after the 'Cats had played 15 home games, I created a scatter plot matrix to look for correlations between the HarbourCats home attendance and possible influencing factors such as the day of the week and temperature. Now that the season has concluded, it's time to return to the data for all 27 home games, to see if temperature remained the strongest correlate with attendance.
+
+I also took this opportunity to move the source data from Google Documents to GitHub, where it can be accessed directly by the R code -- no manual downloads required. The <a href="http://christophergandrud.blogspot.kr/2013/01/sourcegithubdata-simple-function-for.html" target="_blank">code necessary to make this work</a> is from Christopher Gandrud, who wrote the function <span style="font-family: Courier New, Courier, monospace;">source_GitHubData</span>. (Gandrud has also written code to pull <a href="http://christophergandrud.blogspot.ca/2013/04/dropbox-r-data.html" target="_blank">data directly from DropBox</a>.)
+
+### Read the data
+
+First up, the code installs the packages ggplot2 (for the plots) and devtools (for accessing the data from Github) and opens them into the library. Then the "source_GitHubData" function reads the data.
+
+```{r}
+# load ggplot2
+if (!require(ggplot2)) install.packages("ggplot2")
+library(ggplot2)
+#
+# Use the function source_GitHubData, which requires the package devtools
+if (!require(devtools)) install.packages("devtools")
+library(devtools)
+# The functions' gist ID is 4466237
+source_gist("4466237")
+#
+# Download data, which is stored as a csv file at github
+HarbourCat.attend <- source_GitHubData("https://raw.github.com/MonkmanMH/HarbourCats/master/HC_attendance_2013.csv")
+
+```
+### Looking at the attendance data
+
+Next, a simple plot of the raw attendance data.
+
+```{r fig.width=7, fig.height=6}
+# #####
+#
+# simple line plot of data series
+#
+ggplot(HarbourCat.attend, aes(x=num, y=attend)) + 
+    geom_point() + 
+    geom_line()+
+    ggtitle("HarbourCats attendance \n2013 season") +
+    annotate("text", label="Opening Night", x=3.5, y=3050, size=3,    
+      fontface="bold.italic")
+
+```
+
+From this plot, it's easy to see the spike on the opening game, and the end-of-season surge for the final two games.  
+
+When exploring data, it's valuable to get a sense of the distribution.  R provides a "summary()" function as well as "sd()" for the standard deviation.
+
+```{r}
+# summarize the distribution of "attend"
+summary(HarbourCat.attend$attend)
+sd(HarbourCat.attend$attend)
+
+```
+
+When looking at these summary stats, a couple of things jump out at me. First of all, the standard deviation is large compared to the total range, suggesting a very dispersed data set.  The second thing I notice is that the mean is almost half a standard deviation larger than median, indicating a skew in the data to the large end.
+
+While these numerical representations of the distribution are valuable, a plot of the data can help us understand the data still further. A great graphic tool for looking at a distribution and to identify outliers is the box plot (also known as the box-and-whisker plot).
+
+```{r fig.width=7, fig.height=6}
+#
+boxplot(HarbourCat.attend$attend, ylab="attendance", main="Box plot of HarbourCat attendance")
+
+```
+The box is drawn with the first quartile as the lower edge, and the third quartile as the top edge. The median of the distribution is shown with the thick line that runs across the box. The whiskers show the range of the data, excluding the outliers.  And the three dots (in this case, at the top of the chart) are the outliers, defined as being more than 1.5 times the interquartile range (i.e. Q3 - Q1) beyond Q3 or Q1.
+
+Since something special was happening, let's omit those three values as the extreme outliers that were influenced by something other than the weather or the day of the week.  Once we've done that, we'll use the "summary()" function again to describe the distribution of the values.
+
+```{r}
+# #####
+#
+# prune the extreme outliers 
+# and structure the data so that attendance is last and will appear as the Y axis on plots
+HarbourCat.attend.data <- (subset(HarbourCat.attend, num > 1 & num < 26, select = c(num, day2, sun, temp.f, attend)))
+# print the data table to screen
+HarbourCat.attend.data
+#
+# summarize the distribution of the pruned version of "attend"
+summary(HarbourCat.attend.data$attend)
+sd(HarbourCat.attend.data$attend)
+
+```
+
+From these summary statistics, we see that the nature of the data set has changed significantly. The median and mean are almost identical, and the standard deviation is half the magnitude without the outliers.
+
+### The scatterplot matrix
+
+With the outliers removed, we can move on to the scatter plot matrix. This time we'll just run the all-in version that includes a smoothing line on the scatter plot, as well as a histogram of the variable and the correlation coefficients.
+
+
+```{r fig.width=7, fig.height=6}
+#
+# ###################
+# scatter plot matrix
+# ###################
+#
+# scatter plot matrix - with correlation coefficients
+# define panels (copy-paste from the "pairs" help page)
+panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
+{
+    usr <- par("usr"); on.exit(par(usr))
+    par(usr = c(0, 1, 0, 1))
+    r <- abs(cor(x, y))
+    txt <- format(c(r, 0.123456789), digits = digits)[1]
+    txt <- paste0(prefix, txt)
+    if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
+    text(0.5, 0.5, txt, cex = cex.cor * r)
+}
+#
+panel.hist <- function(x, ...)
+{
+    usr <- par("usr"); on.exit(par(usr))
+    par(usr = c(usr[1:2], 0, 1.5) )
+    h <- hist(x, plot = FALSE)
+    breaks <- h$breaks; nB <- length(breaks)
+    y <- h$counts; y <- y/max(y)
+    rect(breaks[-nB], 0, breaks[-1], y, col = "cyan", ...)
+}
+#
+# run pairs plot
+#
+pairs(HarbourCat.attend.data[,1:5], upper.panel = panel.cor,
+                                    diag.panel = panel.hist,
+                                    lower.panel = panel.smooth)
+#
+```
+### Conclusion
+
+A few more data points hasn't fundamentally changed the analysis. Temperature remains the best predictor of attendance, with a correlation coefficient of 0.68.  The day of the week was also a fairly strong predictor, with bigger crowds on Friday and Saturday nights than the Sunday day games and the weekday evening games.  (No surprise there, really.)  
+
+I was surprised to see that attendance seemed to flag as the season went on -- you can see the drop shown in the smoothing line in the plot in the lower left corner (num by attend, where num is the number of the game from 2-25). But this drop can be explained by both the day of the week and the temperature.  From Monday July 29 to Thursday August 1, the temperature was 17 - 18 Celsius (62 - 63 Farenheit). On the Wednesday of this stretch (July 31), under mainly cloudy skies and the temperature at 17 Celsius (63 Farenheit), only 885 people turned up to watch the game -- the only time all season the HarbourCats drew fewer than 1,000 fans to a game.
+
+-30-

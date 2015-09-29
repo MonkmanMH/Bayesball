@@ -1,0 +1,28 @@
+num,date,day,day2,day.night,vs,attend,cloud,sun,temp.c,temp.f,wind,note
+1,6/5/2013,Wed,1,1,Kelowna,3026,mainly sunny,4,21,70,,Opening Night
+2,6/6/2013,Thu,1,1,Kelowna,1082,mainly sunny,4,18,64,,
+3,6/7/2013,Fri,3,1,Kelowna,1542,mainly sunny,4,19,66,windy,
+4,6/11/2013,Tue,1,1,Medford,1014,mostly cloudy,2,17,63,,
+5,6/12/2013,Wed,1,1,Medford,1003,mostly cloudy,2,16,60,,
+6,6/13/2013,Thu,1,1,Medford,1015,partly cloudy,3,19,66,,
+7,6/21/2013,Fri,3,1,Bend,1248,sunny,5,18,64,,
+8,6/22/2013,Sat,3,1,Bend,1640,sunny,5,21,70,,
+9,6/23/2013,Sun,2,0,Bend,1246,cloudy,1,18,64,,
+10,7/5/2013,Fri,3,1,Kelowna,1591,sunny,5,21,70,,
+11,7/6/2013,Sat,3,1,Kelowna,1620,sunny,5,23,73,,
+12,7/7/2013,Sun,2,0,Kelowna,1402,sunny,5,21,70,,
+13,7/8/2013,Mon,1,1,Walla Walla,1426,sunny,5,22,72,,Armed Forces Night
+14,7/9/2013,Tue,1,1,Walla Walla,1187,sunny,5,23,73,,
+15,7/10/2013,Wed,1,1,Walla Walla,1574,sunny,5,22,72,windy,
+16,7/19/2013,Fri,3,1,Wenatchee,1515,sunny,5,23,73,,Little League 
+17,7/20/2013,Sat,3,1,Wenatchee,1052,sunny,5,21,70,,
+18,7/21/2013,Sun,2,0,Wenatchee,1208,sunny,5,22,72,,
+19,7/27/2013,Sat,3,1,Corvallis,1292,sunny,5,21,69,,
+20,7/28/2013,Sun,2,0,Corvallis,1218,sunny,5,22,71,,
+21,7/29/2013,Mon,1,1,Corvallis,1013,sunny,5,18,64,,
+22,7/30/2013,Tue,1,1,Klamath Falls,1104,sunny,5,17,62,,
+23,7/31/2013,Wed,1,1,Klamath Falls,885,mainly cloudy,2,17,63,,
+24,8/1/2013,Thu,1,1,Klamath Falls,1179,mostly cloudy,3,17,63,,
+25,8/9/2013,Fri,3,1,Bellingham,1731,mainly sunny,4,23,73,,mascotlandia
+26,8/10/2013,Sat,3,1,Bellingham,2513,sunny,5,20,68,,fireworks!
+27,8/11/2013,Sun,2,0,Bellingham,2467,mainly sunny,4,21,70,,last game of the season
