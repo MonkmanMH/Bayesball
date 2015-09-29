@@ -1,0 +1,72 @@
+---
+title: "SeriesPost_example_drought"
+author: "Martin Monkman"
+date: "September 19, 2015"
+output: html_document
+---
+
+# Lahman package
+
+## SeriesPost table: Example 2
+
+
+#### Which team has the longest playoff drought?
+
+(relies on tables generated in first example)
+
+
+```{r}
+
+data(SeriesPost)
+tail(SeriesPost)
+
+library(dplyr)
+library(reshape2)
+
+# -- rerun of previous code --
+
+# create a long version of the SeriesPost table
+postseason_table <-  melt(SeriesPost,
+                          id.vars = c("yearID", "round", "lgIDwinner",
+                                      "lgIDloser", "wins", "losses", "ties")) 
+tail(postseason_table)
+
+# Create table of current franchises and their names
+data("TeamsFranchises")
+active_teams <- TeamsFranchises %>% 
+  subset(active == "Y") %>%
+  mutate(franchID = as.character(franchID)) %>%
+  select(franchID, franchName)
+active_teams
+#
+# create a list of the team IDs
+data("Teams")
+team_ID_list <- Teams %>%
+  filter(yearID > 1900, lgID != "FL") %>%
+  mutate(teamID = as.character(teamID)) %>%
+  mutate(franchID = as.character(franchID)) %>%
+  select(yearID, teamID, franchID, name) %>%
+  distinct(teamID) 
+team_ID_list
+# add franchiseName from active_teams to team_names
+team_ID_list <- inner_join(team_ID_list, active_teams, "franchID")
+team_ID_list
+#
+
+# -- end rerun --
+
+postseason_table <- postseason_table %>%
+#  mutate(teamIDwinner = as.character(teamIDwinner)) %>%
+  arrange(desc(yearID)) %>%
+  distinct(value)
+
+postseason_table
+
+
+
+
+```
+
+
+
+

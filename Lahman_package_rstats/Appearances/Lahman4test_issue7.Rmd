@@ -1,0 +1,69 @@
+---
+title: "Lahman Package - Issue Testing"
+author: "Martin Monkman"
+date: "August 29, 2015"
+output: html_document
+---
+
+Testing issues in the Lahman package (version 3.0-1)
+
+
+## Issue #7
+Appearances Example Returns Bad Data 
+[https://github.com/cdalzell/Lahman/issues/7](https://github.com/cdalzell/Lahman/issues/7)
+
+### Using the Lahman package:
+
+```{r}
+library(Lahman)
+library(plyr)
+
+# Individuals who have played all 162 games since 1961
+all162 <- ddply(subset(Appearances, yearID > 1960), .(yearID),
+                         summarise, allGamers = playerID[G_all == 162])
+# Number of all-gamers by year
+table(all162$yearID)
+
+```
+
+### Using the original Lahman csv file
+
+Hypothesis: this is a problem in the source data
+
+#### 2013 version (i.e. same as Lahman package 3.0-1)
+
+Notes: 
+- the 'Appearances' table 2013 version of the Lahman database (csv format) was unzipped and renamed 'Appearances_2013'.
+- the source file is lahman-csv_2014-02-14.zip, from [http://www.seanlahman.com/baseball-archive/statistics/] (http://www.seanlahman.com/baseball-archive/statistics/)
+
+This csv file is thenis read into the R workspace and the same code is run.
+
+```{r}
+Appearances_2013 <- read.csv("Appearances_2013.csv")
+
+all162_2013 <- ddply(subset(Appearances_2013, yearID > 1960), .(yearID),
+                         summarise, allGamers = playerID[G_all == 162])
+table(all162_2013$yearID)
+```
+
+#### 2014 version
+
+Notes: 
+- the 'Appearances' table 2014 version of the Lahman database (csv format) was unzipped and renamed 'Appearances_2014'.
+- the source file is lahman-csv_2015-01-24.zip, from [http://www.seanlahman.com/baseball-archive/statistics/] (http://www.seanlahman.com/baseball-archive/statistics/)
+
+This csv file is thenis read into the R workspace and the same code is run.
+
+```{r}
+Appearances_2014 <- read.csv("Appearances_2014.csv")
+
+all162_2014 <- ddply(subset(Appearances_2014, yearID > 1960), .(yearID),
+                         summarise, allGamers = playerID[G_all == 162])
+table(all162_2014$yearID)
+```
+
+### CONCLUSION
+
+The issue is in the source data.
+
+-30-

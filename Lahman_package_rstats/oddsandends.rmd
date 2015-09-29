@@ -1,0 +1,85 @@
+---
+title: "Testing Lahman 3.0"
+author: "Martin Monkman"
+date: "Sunday, August 31, 2014"
+output: html_document
+---
+
+This markdown document incorporates a variety of short scripts that draw on the various tables in the `Lahman` package. (See the Lahman project page on RForge for more details <http://lahman.r-forge.r-project.org/>.)
+
+Note that some of scripts appear in the documentation of other R packages; in those cases, the original source is noted prior to the script.
+
+First of all, install and load the new version of `Lahman`, and load the `dplyr` package.
+
+```{r}
+# install.packages("Lahman", repos="http://R-Forge.R-project.org")
+library(Lahman)
+library(dplyr)
+#
+```
+##Master & Fielding
+
+This uses an inner join to merge the two tables `Master` and `Fielding` into a new data frame "MasterFielding".  The first approach relies on the `merge` instruction, while the second uses the much faster `inner_join` command from `dplyr`.
+
+```{r}
+# throwing by position
+# version 1 - "merge"
+MasterFielding <- data.frame(merge(Master, Fielding, by="playerID"))
+MasterFielding <- merge(Master, Fielding, by="playerID")
+system.time(MasterFielding <- merge(Master, Fielding, by="playerID"))
+# the dplyr version -- faster
+MasterFielding <- inner_join(Fielding, Master, by="playerID")
+system.time(MasterFielding <- inner_join(Fielding, Master, by="playerID"))
+#
+#
+# a count of games played, by position
+MasterFielding <- subset(MasterFielding, POS != "OF" & yearID > "1944")
+#
+MasterFielding %.%
+  group_by(playerID, POS, throws) %.%
+  summarise(gamecount = sum(G)) %.%
+  arrange(desc(gamecount)) %.% 
+  head(5)
+#
+MasterFielding <- inner_join(Fielding, Master, by="playerID")
+# select only those seasons since 1945 and 
+# omit the records that are OF summary (i.e. leave the RF, CF, and LF)
+MasterFielding <- subset(MasterFielding, POS != "OF" & yearID > "1944")
+#
+```
+
+Now with the MasterFielding table, we can use the `summarise` command (`dplyr`) to generate a new table, "Player_games", that in turn is summarised into a table counting the games played at each position.
+
+```{r}
+Player_games <- MasterFielding %.%
+  group_by(playerID, POS, throws) %.%
+  summarise(gamecount = sum(G))
+Player_POS <- Player_games %.%
+  group_by(POS, throws) %.%
+  summarise(playercount = length(gamecount))
+head(Player_POS)
+#
+```
+
+##Batting (dplyr reference)
+
+This chunk of code is lifted from the `dplyr` [Vignettes page](http://cran.r-project.org/web/packages/dplyr/vignettes/databases.html), under the topic "Postgresql". NOTE: the package `postgres` is not available for R 3.1.1
+
+```{r}
+if (has_lahman("postgres")) {
+  hflights_postgres <- tbl(src_postgres("hflights"), "hflights")
+}
+```
+
+##Reference list
+[Lahman at CRAN](http://cran.r-project.org/web/packages/Lahman/index.html)
+
+[Lahman at RForge](http://lahman.r-forge.r-project.org/)
+
+### dplyr
+
+[dplyr at CRAN](http://cran.r-project.org/web/packages/dplyr/index.html)
+
+[dplyr: Introduction to dplyr (at CRAN)](http://cran.rstudio.com/web/packages/dplyr/vignettes/introduction.html)
+
+[dplyr: Vignettes](http://cran.r-project.org/web/packages/dplyr/vignettes/databases.html)
