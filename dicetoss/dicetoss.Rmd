@@ -1,0 +1,95 @@
+---
+title: "TossTheDice"
+author: "Martin Monkman"
+date: "December 15, 2015"
+output: html_document
+---
+
+## The puzzle:
+
+Assuming the dice are fair, which has the greatest likelihood?
+* >= 1 six with 6 dice
+* >= 2 sixes with 12 dice
+* >= 3 sixes with 18 dice
+
+
+
+### Two solutions by @drob:
+
+```{r}
+
+which.max(pbinom(0:2, 6 * (1:3), 1 / 6, lower.tail = FALSE))
+
+```
+
+Generating a plot:
+
+```{r}
+
+library(dplyr)
+library(ggplot2)
+
+data_frame(threshold = 1:50, dice = 6 * threshold) %>%
+  mutate(prob_less = pbinom(threshold - 1, dice, 1 / 6), 
+         prob_more = pbinom(threshold, dice, 1 / 6, lower.tail = FALSE),
+         prob_equal = dbinom(threshold, dice, 1 / 6)) %>%
+  ggplot(aes(prob_less, prob_more, color = dice)) +
+  geom_point() +
+  geom_abline(colour = "red") +
+  geom_errorbar(aes(ymin = prob_more, ymax = prob_more + prob_equal)) +
+  xlab("probability <") +
+  ylab("probability > or >=")
+
+```
+
+## Martin's way - some Monte Carlo
+
+
+
+```{r}
+
+
+dice = 18
+
+TwoThousandTosses <- rbinom(2000, dice, (1/6))
+tosstable <- table(TwoThousandTosses)
+tosstable
+plot(tosstable)
+tosstable <- data.frame(table(TwoThousandTosses))
+
+tosstable$TwoThousandTosses <- as.integer(as.character(tosstable$TwoThousandTosses))
+
+str(tosstable)
+tosstable
+
+tosstable %>%
+  summarise(sum(Freq))
+
+trials <- tosstable %>%
+  summarise(sum(Freq))
+
+tosstable %>% 
+  filter(TwoThousandTosses >= (dice/6)) 
+
+successes <- tosstable %>% 
+  filter(TwoThousandTosses >= (dice/6)) %>%
+  summarise(sum(Freq))
+  
+successes / trials
+
+
+
+
+
+
+
+```
+
+
+##Source: 
+
+from twitter
+https://twitter.com/alittlestats/status/676499098921541632
+
+@alittlestats
+
