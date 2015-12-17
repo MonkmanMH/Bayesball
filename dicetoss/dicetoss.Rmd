@@ -101,3 +101,12 @@ https://twitter.com/alittlestats/status/676499098921541632
 
 @alittlestats
 
+
+## Other resources:
+
+[Throwing dice - theory](http://gwydir.demon.co.uk/jo/probability/calcdice.htm)
+
+[A Collection of Dice Problems (by Matthew M. Conroy)](http://www.madandmoonly.com/doctormatt/mathematics/dice1.pdf)
+
+[Probability (a collection of examples and problems by Neil E. Cotter)](http://www.ece.utah.edu/eceCTools/Probability/_Probability.htm)
+
