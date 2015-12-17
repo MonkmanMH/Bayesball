@@ -54,30 +54,32 @@ data_frame(threshold = 1:50, dice = 6 * threshold) %>%
 ```{r}
 
 
-dice = 12
+dice = 18
 
-TwoThousandTosses <- rbinom(2000, dice, (1/6))
-tosstable <- table(TwoThousandTosses)
+TossResult <- rbinom(2000000, dice, (1/6))
+head(TossResult)
+tosstable <- table(TossResult)
 tosstable
-plot(tosstable)
-tosstable <- data.frame(table(TwoThousandTosses))
 
-tosstable$TwoThousandTosses <- as.integer(as.character(tosstable$TwoThousandTosses))
+plot(tosstable)
+
+tosstable <- data.frame(table(TossResult))
+tosstable$TossResult <- as.integer(as.character(tosstable$TossResult))
 
 str(tosstable)
 tosstable
 
-tosstable %>%
-  summarise(sum(Freq))
+#tosstable %>%
+#  summarise(sum(Freq))
 
 trials <- tosstable %>%
   summarise(sum(Freq))
 
-tosstable %>% 
-  filter(TwoThousandTosses >= (dice/6)) 
+#tosstable %>% 
+#  filter(TossResult >= (dice/6)) 
 
 successes <- tosstable %>% 
-  filter(TwoThousandTosses >= (dice/6)) %>%
+  filter(TossResult >= (dice/6)) %>%
   summarise(sum(Freq))
   
 successes / trials
