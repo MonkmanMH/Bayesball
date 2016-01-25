@@ -56,7 +56,7 @@ data_frame(threshold = 1:50, dice = 6 * threshold) %>%
 
 dice = 18
 
-TossResult <- rbinom(2000000, dice, (1/6))
+TossResult <- rbinom(200000000, dice, (1/6))
 head(TossResult)
 tosstable <- table(TossResult)
 tosstable
