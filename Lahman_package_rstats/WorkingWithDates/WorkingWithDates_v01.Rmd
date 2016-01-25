@@ -1,0 +1,73 @@
+---
+title: "Working With Messy Dates"
+author: "Martin Monkman"
+date: "January 5, 2016"
+output: html_document
+---
+
+Often analysts are confronted with messy data--and one of the most frequently encountered forms of mess is in the date field. The problem arises for a host of reasons; a lack of standards in how dates are represented in the data is but one. For instance, there are a plethora of [ephoch dates](https://en.wikipedia.org/wiki/Epoch_(reference_date)#Notable_epoch_dates_in_computing) associated with different operating systems and programming languages.
+
+The problem I'll tackle today is associated with the use of two different ways of representing dates that shows up in a single data file. I suspect this is because the dates in question are on both sides of an epoch date, so those prior to January 1st, 1900 are represented differently than those that follow.
+
+**Important note:** If you aren't already familiar with the International Organization of Standardization's [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) I strongly encourage you to get on board--it's a logical, non-ambiguous, well-defined method of representing dates.)
+
+For this exercise, we will use the `Master` table in the `Lahman` package in R.  The following code loads the package, and adds the data table.  The `ls.str()` command then gives us a summary of each variable in the table, its type and the first few values.
+
+```{r}
+library(Lahman)
+data(Master)
+
+ls.str()
+```
+
+**`debut`**
+
+Let's take a look at the values in the `debut` variable. We know from the `ls.str0` output that it is a character variable.
+
+```{r}
+head(Master$debut, 100)
+```
+
+
+We can now see three types of date format in the variable `debut`: 
+
+* month-day-year of the post-1900 values, 
+
+* yyyy-mm-dd format of the pre-1900 dates, and 
+
+* a few "NA" values where the debut date is unknown.
+
+The first step is to reformat all of the `debut` values since January 1st, 1900 into a standard date format using `as.Date`, and then adding them to a new variable `debutDate` (for debut in date format).  Once that has finished the `head()` instruction is used to take a quick look at the result.
+
+```{r, echo=FALSE}
+Master$debutDate <- (as.Date(Master$debut, "%m/%d/%Y"))
+head(Master$debutDate, 100)
+```
+
+As we can now see, most of the dates are in the ISO 8601 format.  But the pre-1900 values are now missing, represented as an "NA" in the field.
+
+The solution is to do a conditional replacement, using `is.na` as our condition.
+
+
+```{r}
+Master$debutDate[is.na(Master$debutDate)] <- 
+  as.Date(Master$debut[is.na(Master$debutDate)])
+head(Master$debutDate, 100)
+```
+This adds all of the valid values into the new variable `debutDate`, which we can now use consistently.
+
+** `finalGame` **
+
+To get a version of `finalGame` that also works, we can simply repeat what we've done above.
+
+```{r}
+head(Master$finalGame, 100)
+Master$finalGameDate <- (as.Date(Master$finalGame, "%m/%d/%Y"))
+Master$finalGameDate[is.na(Master$finalGameDate)] <- 
+  as.Date(Master$finalGame[is.na(Master$finalGameDate)])
+head(Master$finalGameDate, 100)
+```
+
+
+
+-30-
