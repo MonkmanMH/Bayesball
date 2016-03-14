@@ -1,0 +1,168 @@
+---
+title: "Adding a subtitle to a ggplot2 plot"
+author: "Martin Monkman"
+date: "March 13, 2016"
+output: html_document
+---
+
+_This is an update to my series of blog posts, most recently [2015-01-06](http://bayesball.blogspot.com/2015/01/run-scoring-trends-using-shiny-to.html), visualizing run scoring trends in Major League Baseball._
+
+Earlier today I saw a tweet about some code to put a subtitle in a `ggplot2` plot. How do I get some of that, I asked myself?  It turned out to be very simple, thanks to the work of Bob Rudis, shared in his [blog post "Subtitles in ggplot2"](http://rud.is/b/2016/03/12/ggplot2%E3%81%A7%E5%AD%97%E5%B9%95-subtitles-in-ggplot2/).
+
+In order to replicate his work, I went back to some of my own code, drawing on the `Lahman` database package. The code summarizes the data, and creates a plot showing the annual average number of runs scored by each team in every season from 1901 through 2014, and adds a trend line using the loess smoothing method.
+
+```{r}
+# load the package into R, and open the data table 'Teams' into the
+# workspace
+library(Lahman)
+data(Teams)
+#
+# package load 
+library(dplyr)
+library(ggplot2)
+#
+
+# CREATE LEAGUE SUMMARY TABLES
+# ============================
+#
+
+# select a sub-set of teams from 1901 [the establishment of the American League] 
+# forward to most recent year;
+MLB_RPG <- Teams %>%
+  filter(yearID > 1900, lgID != "FL") %>%
+  group_by(yearID) %>%
+  summarise(R=sum(R), RA=sum(RA), G=sum(G)) %>%
+  mutate(leagueRPG=R/G, leagueRAPG=RA/G)
+
+```
+
+Plot the MLB runs per game trend:
+
+```{r}
+
+MLBRPGplot <- ggplot(MLB_RPG, aes(x=yearID, y=leagueRPG)) +
+  geom_point() +
+  theme_bw() +
+  theme(panel.grid.minor = element_line(colour="gray95")) +
+  scale_x_continuous(breaks = seq(1900, 2015, by = 20)) +
+  scale_y_continuous(limits = c(3, 6), breaks = seq(3, 6, by = 1)) +
+  xlab("year") +
+  ylab("team runs per game") +
+  geom_smooth(span = 0.25) +
+  ggtitle("MLB run scoring, 1901-2014") +
+  theme(plot.title = element_text(hjust=0, size=16))
+
+  
+MLBRPGplot
+
+  
+
+```
+
+#### Adding a subtitle: the function
+
+So now we have a nice looking dot plot showing the average number of runs scored per game for the years 1901-2014.
+
+But a popular feature of charts---particularly in magazines---is a subtitle that has a summary of what the chart shows and/or what the author wants to emphasize.
+
+In this case, we could legitimately say something like
+
+* The peak of run scoring in the 2000 season has been followed by a steady drop
+
+* Teams scored 20% fewer runs in 2015 than in 2000
+
+* Team run scoring has fallen to just over 4 runs per game from the 2000 peak of 5 runs
+
+* Run scoring has been falling for 15 years, reversing a 30 year upward trend
+
+I like this last one, drawing attention not only to the recent decline but also the longer trend that started with the low-scoring environment of 1968.
+
+How can we add a subtitle to our chart that does that?
+
+Bob Rudis has created a function that quickly and easily allows us to add a subtitle.  The following code is taken from his [blog post "Subtitles in ggplot2" of 2016-03-12](http://rud.is/b/2016/03/12/ggplot2%E3%81%A7%E5%AD%97%E5%B9%95-subtitles-in-ggplot2/).
+
+The code for this function relies on two additional packages, `grid` and `gtable`.  Other than the package loads, this is a straight copy/paste from Bob's blog post.
+
+
+```{r}
+
+library(grid)
+library(gtable)
+
+ggplot_with_subtitle <- function(gg, 
+                                 label="", 
+                                 fontfamily=NULL,
+                                 fontsize=10,
+                                 hjust=0, vjust=0, 
+                                 bottom_margin=5.5,
+                                 newpage=is.null(vp),
+                                 vp=NULL,
+                                 ...) {
+ 
+  if (is.null(fontfamily)) {
+    gpr <- gpar(fontsize=fontsize, ...)
+  } else {
+    gpr <- gpar(fontfamily=fontfamily, fontsize=fontsize, ...)
+  }
+ 
+  subtitle <- textGrob(label, x=unit(hjust, "npc"), y=unit(hjust, "npc"), 
+                       hjust=hjust, vjust=vjust,
+                       gp=gpr)
+ 
+  data <- ggplot_build(gg)
+ 
+  gt <- ggplot_gtable(data)
+  gt <- gtable_add_rows(gt, grobHeight(subtitle), 2)
+  gt <- gtable_add_grob(gt, subtitle, 3, 4, 3, 4, 8, "off", "subtitle")
+  gt <- gtable_add_rows(gt, grid::unit(bottom_margin, "pt"), 3)
+ 
+  if (newpage) grid.newpage()
+ 
+  if (is.null(vp)) {
+    grid.draw(gt)
+  } else {
+    if (is.character(vp)) seekViewport(vp) else pushViewport(vp)
+    grid.draw(gt)
+    upViewport()
+  }
+ 
+  invisible(data)
+ 
+}
+
+
+
+```
+
+#### Adding a subtitle
+
+Now we've got the function loaded into our R workspace, the steps are easy:
+
+* Rename the active plot object `gg`
+
+* Define the text that we want to be in the subtitle
+
+* Call the function
+
+```{r}
+
+# set the name of the current plot object to "gg"
+gg <- MLBRPGplot
+
+# define the subtitle text
+subtitle <- 
+  "Run scoring has been falling for 15 years, reversing a 30 year upward trend"
+ 
+ggplot_with_subtitle(gg, subtitle,
+                     bottom_margin=20, lineheight=0.9)
+
+
+```
+
+Wasn't that easy? Thanks, Bob!
+
+And it's going to get easier---in the few days since his blog post, Bob Rudis has been takign this into the `ggplot2` development environment, working on the code necessary to add this as a simple extension to the package's functionality. It's early days, but it's looking great. (See [`ggplot2` Pull request #1582](https://github.com/hadley/ggplot2/pull/1582).) Thanks in advance, Bob!  
+
+And thanks also to the rest of the `ggplot2` developers, for making those of us who use the package create good-looking and effective data visualization. 
+
+-30-
