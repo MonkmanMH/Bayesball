@@ -7,11 +7,11 @@ output: html_document
 
 _This is an update to my series of blog posts, most recently [2015-01-06](http://bayesball.blogspot.com/2015/01/run-scoring-trends-using-shiny-to.html), visualizing run scoring trends in Major League Baseball._
 
-Earlier today I saw a tweet about some code to put a subtitle in a `ggplot2` plot. How do I get some of that, I asked myself?  It turned out to be very simple, thanks to the work of Bob Rudis, shared in his [blog post "Subtitles in ggplot2"](http://rud.is/b/2016/03/12/ggplot2%E3%81%A7%E5%AD%97%E5%B9%95-subtitles-in-ggplot2/).
+Earlier today I saw a tweet about some code to put a subtitle in a `ggplot2` plot. How do I get some of that, I asked myself?  It turned out to be very simple, thanks to the work of Bob Rudis, shared in his [blog post "Subtitles in ggplot2"](http://rud.is/b/2016/03/12/ggplot2%E3%81%A7%E5%AD%97%E5%B9%95-subtitles-in-ggplot2/), and [cross-posted at R-bloggers.com](http://www.r-bloggers.com/ggplot2%E3%81%A7%E5%AD%97%E5%B9%95-subtitles-in-ggplot2/).
 
 In order to replicate his work, I went back to some of my own code, drawing on the `Lahman` database package. The code summarizes the data, and creates a plot showing the annual average number of runs scored by each team in every season from 1901 through 2014, and adds a trend line using the loess smoothing method.
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 # load the package into R, and open the data table 'Teams' into the
 # workspace
 library(Lahman)
@@ -22,12 +22,16 @@ library(dplyr)
 library(ggplot2)
 #
 
-# CREATE LEAGUE SUMMARY TABLES
-# ============================
+# CREATE SUMMARY TABLE
+# ====================
 #
 
-# select a sub-set of teams from 1901 [the establishment of the American League] 
-# forward to most recent year;
+# create a new dataframe that
+# - filters from 1901 [the establishment of the American League] to the most recent year,
+# - filters out the Federal League
+# - summarizes the total number of runs scored, runs allowed, and games played
+# - calculates the league runs and runs allowed per game 
+
 MLB_RPG <- Teams %>%
   filter(yearID > 1900, lgID != "FL") %>%
   group_by(yearID) %>%
@@ -38,7 +42,7 @@ MLB_RPG <- Teams %>%
 
 Plot the MLB runs per game trend:
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 
 MLBRPGplot <- ggplot(MLB_RPG, aes(x=yearID, y=leagueRPG)) +
   geom_point() +
@@ -65,7 +69,7 @@ So now we have a nice looking dot plot showing the average number of runs scored
 
 But a popular feature of charts---particularly in magazines---is a subtitle that has a summary of what the chart shows and/or what the author wants to emphasize.
 
-In this case, we could legitimately say something like
+In this case, we could legitimately say something like any of the following:
 
 * The peak of run scoring in the 2000 season has been followed by a steady drop
 
@@ -84,7 +88,7 @@ Bob Rudis has created a function that quickly and easily allows us to add a subt
 The code for this function relies on two additional packages, `grid` and `gtable`.  Other than the package loads, this is a straight copy/paste from Bob's blog post.
 
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 
 library(grid)
 library(gtable)
@@ -138,13 +142,13 @@ ggplot_with_subtitle <- function(gg,
 
 Now we've got the function loaded into our R workspace, the steps are easy:
 
-* Rename the active plot object `gg`
+* Rename the active plot object `gg` (simply because that's what Bob's code uses)
 
 * Define the text that we want to be in the subtitle
 
 * Call the function
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 
 # set the name of the current plot object to "gg"
 gg <- MLBRPGplot
@@ -161,7 +165,7 @@ ggplot_with_subtitle(gg, subtitle,
 
 Wasn't that easy? Thanks, Bob!
 
-And it's going to get easier---in the few days since his blog post, Bob Rudis has been takign this into the `ggplot2` development environment, working on the code necessary to add this as a simple extension to the package's functionality. It's early days, but it's looking great. (See [`ggplot2` Pull request #1582](https://github.com/hadley/ggplot2/pull/1582).) Thanks in advance, Bob!  
+And it's going to get easier---in the few days since his blog post, Bob Rudis has taken this into the `ggplot2` development environment, working on the code necessary to add this as a simple extension to the package's already extensive functionality. It's early days, but it's looking great. (See [`ggplot2` Pull request #1582](https://github.com/hadley/ggplot2/pull/1582).) Thanks again, Bob!  
 
 And thanks also to the rest of the `ggplot2` developers, for making those of us who use the package create good-looking and effective data visualization. 
 
