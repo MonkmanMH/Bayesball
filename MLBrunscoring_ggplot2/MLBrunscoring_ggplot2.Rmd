@@ -5,11 +5,14 @@ date: "March 13, 2016"
 output: html_document
 ---
 
-_This is an update to my series of blog posts, most recently [2015-01-06](http://bayesball.blogspot.com/2015/01/run-scoring-trends-using-shiny-to.html), visualizing run scoring trends in Major League Baseball._
 
-Earlier today I saw a tweet about some code to put a subtitle in a `ggplot2` plot. How do I get some of that, I asked myself?  It turned out to be very simple, thanks to the work of Bob Rudis, shared in his [blog post "Subtitles in ggplot2"](http://rud.is/b/2016/03/12/ggplot2%E3%81%A7%E5%AD%97%E5%B9%95-subtitles-in-ggplot2/), and [cross-posted at R-bloggers.com](http://www.r-bloggers.com/ggplot2%E3%81%A7%E5%AD%97%E5%B9%95-subtitles-in-ggplot2/).
+A couple of days ago (2016-03-12) a short blog post by Bob Rudis appeared on R-bloggers.com, ["Subtitles in ggplot2"](http://www.r-bloggers.com/ggplot2%E3%81%A7%E5%AD%97%E5%B9%95-subtitles-in-ggplot2/). I was intrigued by the idea and what this could mean for my own plotting efforts, and it turned out to be very simple to apply. 
 
-In order to replicate his work, I went back to some of my own code, drawing on the `Lahman` database package. The code summarizes the data, and creates a plot showing the annual average number of runs scored by each team in every season from 1901 through 2014, and adds a trend line using the loess smoothing method.
+(Note that Bob's post originally appeared on his own blog, as ["Subtitles in ggplot2"](http://rud.is/b/2016/03/12/ggplot2%E3%81%A7%E5%AD%97%E5%B9%95-subtitles-in-ggplot2/).)
+
+In order to see if I could create a plot with a subtitle, I went back to some of my own code, drawing on the `Lahman` database package. The code summarizes the data, and creates a plot showing the annual average number of runs scored by each team in every season from 1901 through 2014, including a trend line using the loess smoothing method.
+
+his is an update to my series of blog posts, most recently[2015-01-06]("http://bayesball.blogspot.com/2015/01/run-scoring-trends-using-shiny-to.html"), visualizing run scoring trends in Major League Baseball.
 
 ```{r, message = FALSE, warning = FALSE}
 # load the package into R, and open the data table 'Teams' into the
@@ -40,7 +43,10 @@ MLB_RPG <- Teams %>%
 
 ```
 
-Plot the MLB runs per game trend:
+#### Plot the MLB runs per game trend
+
+Below is the code to create the plot, including the formatting. Note the `hjust=0` (for horizontal justification = left) in the `plot.title` line. This is because the default for the title is to be centred, while the subtitle is to be justified to the left.
+
 
 ```{r, message = FALSE, warning = FALSE}
 
@@ -83,7 +89,7 @@ I like this last one, drawing attention not only to the recent decline but also 
 
 How can we add a subtitle to our chart that does that?
 
-Bob Rudis has created a function that quickly and easily allows us to add a subtitle.  The following code is taken from his [blog post "Subtitles in ggplot2" of 2016-03-12](http://rud.is/b/2016/03/12/ggplot2%E3%81%A7%E5%AD%97%E5%B9%95-subtitles-in-ggplot2/).
+The function Bob Rudis has created quickly and easily allows us to add a subtitle.  The following code is taken from his [blog post "Subtitles in ggplot2" of 2016-03-12](http://rud.is/b/2016/03/12/ggplot2%E3%81%A7%E5%AD%97%E5%B9%95-subtitles-in-ggplot2/).
 
 The code for this function relies on two additional packages, `grid` and `gtable`.  Other than the package loads, this is a straight copy/paste from Bob's blog post.
 
@@ -165,7 +171,7 @@ ggplot_with_subtitle(gg, subtitle,
 
 Wasn't that easy? Thanks, Bob!
 
-And it's going to get easier---in the few days since his blog post, Bob Rudis has taken this into the `ggplot2` development environment, working on the code necessary to add this as a simple extension to the package's already extensive functionality. It's early days, but it's looking great. (See [`ggplot2` Pull request #1582](https://github.com/hadley/ggplot2/pull/1582).) Thanks again, Bob!  
+And it's going to get easier---in the few days since his blog post, Bob has taken this into the `ggplot2` development environment, working on the code necessary to add this as a simple extension to the package's already extensive functionality. And Jan Schulz has chimed in, adding the ability to add a text annotation (e.g. the data source) under the plot. It's early days, but it's looking great. (See [`ggplot2` Pull request #1582](https://github.com/hadley/ggplot2/pull/1582).) Thanks again, Bob!  
 
 And thanks also to the rest of the `ggplot2` developers, for making those of us who use the package create good-looking and effective data visualization. 
 
