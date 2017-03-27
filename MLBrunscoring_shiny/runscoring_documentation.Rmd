@@ -1,12 +1,12 @@
 ---
 title: "Run scoring trends - references"
 author: "Martin Monkman"
-date: "Wednesday, November 12, 2014"
+date: "2017-03-26"
 output: html_document
 ---
 
 ## Major League Baseball run scoring trends
-### Version 2.03 (2015-01-13)
+### Version 3.00 (2017-03-26)
 ### Documentation
 
 This app was written by Martin Monkman using the R package [Shiny](http://shiny.rstudio.com/).
