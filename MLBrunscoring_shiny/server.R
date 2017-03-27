@@ -59,7 +59,7 @@ shinyServer(function(input, output) {
   output$lg_yearrange <- renderUI({
     sliderInput("lg_yearrange_input", label = h4("Select year range to plot"), 
                 min = firstyear, max = mostrecentyear, value = c(firstyear, mostrecentyear), 
-                step = 1, round = TRUE, format = "####",
+                step = 1, round = TRUE, sep = "",
                 animate = TRUE)
   })
   #
@@ -91,8 +91,8 @@ output$plot_MLBtrend <- renderPlot({
     # add trend line to plot?
       if (input$trendlineselect == TRUE) {
           MLBRPG <- MLBRPG + 
-            stat_smooth(method=loess, 
-                        span=input$trendline_sen_sel,
+            stat_smooth(method='loess', 
+                        span=as.numeric(input$trendline_sen_sel),
                         level=as.numeric(input$trendline_conf_sel))
          }
     # final plot
@@ -165,7 +165,7 @@ output$plot_teamTrend <- renderPlot({
   output$team_yearrange <- renderUI({
     sliderInput("team_yearrange_input", label = h4("Select year range to plot"), 
                 min = firstteamyear, max = lastteamyear, value = c(firstteamyear, lastteamyear), 
-                step = 1, round = TRUE, format = "####",
+                step = 1, round = TRUE, sep = "",
                 animate = TRUE)
   })
   # pull the team name
@@ -176,7 +176,7 @@ output$plot_teamTrend <- renderPlot({
   ##       AND SHOULD BE CORRECT WITH LAHMAN 4.0
   #team.name <- tail(Team1$name, 1)
   # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  team.name <- tail(Team1$name, 2)
+  team.name <- tail(Team1$name, 1)
   # now put the team name, years, and the rest of the title text into a single string
   titletext <- paste(team.name, firstteamyear, "-", lastteamyear, 
                       "\nRuns scored relative to the league average")
@@ -194,7 +194,7 @@ output$plot_teamTrend <- renderPlot({
 # add trend line to plot?
 if (input$team_trendlineselect == TRUE) {
   teamTrend <- teamTrend + 
-    stat_smooth(method=loess,
+    stat_smooth(method='loess',
                 size=1.5,
                 span=input$team_trendline_sen_sel,
                 se=FALSE)
@@ -230,11 +230,13 @@ output$team_data_table <- renderDataTable({
   # the raw data table
   #   team_data_table <- as.data.frame(Teams.merge)
   #
+  # NOTE: moved to pre-processing
   # the data table, with only the interesting fields (columns)
-  team_data_table <- Teams.merge %>%
-    select(yearID, lgID, franchID, name, W, L, WLpct, R.x, RA.x, teamRPG, leagueRPG, R_index, 
-           teamRAPG, leagueRAPG, RA_index)
+  #  select(yearID, lgID, franchID, name, W, L, WLpct, R.x, RA.x, teamRPG, leagueRPG, R_index, 
+  #         teamRAPG, leagueRAPG, RA_index)
 
+team_data_table <- Teams.merge
+  
   
   if (input$tableyearselect != "All"){
     team_data_table <- team_data_table[team_data_table$yearID == input$tableyearselect,]

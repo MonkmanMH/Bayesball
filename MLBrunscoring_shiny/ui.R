@@ -32,7 +32,7 @@ shinyUI(navbarPage("MLB run scoring trends",
                                 # slider bar for trend line sensitivity 
                                 sliderInput("trendline_sen_sel", 
                                             label = (h5("Select trend line sensitivity")), 
-                                            min = 0.05, max = 1, value = .50, step = .05),
+                                            min = 0.05, max = 1, value = 0.50, step = 0.05),
                                 hr(),
                                 # radio buttons for trend line confidence interval 
                                 radioButtons("trendline_conf_sel", 
@@ -125,7 +125,7 @@ shinyUI(navbarPage("MLB run scoring trends",
                           column(4,
                                  selectInput("tableyearselect",
                                              h5("year:"),
-                                             c("All", as.integer(1901:2014)))
+                                             c("All", as.integer(1901:2016)))
                           ),
                           
                           column(4,

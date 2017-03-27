@@ -14,7 +14,7 @@ This app was written by Martin Monkman using the R package [Shiny](http://shiny.
 The app is on [shinyapps.io by RStudio](https://www.shinyapps.io/).   
 
 All of the files associated with this app, including the code and R markdown files, can be found on [github.com](github.com), 
-at [MonkmanMH/MLBrunscoring_shiny](https://github.com/MonkmanMH/MLBrunscoring_shiny).
+at [MonkmanMH/Bayesball/MLBrunscoring_shiny](https://github.com/MonkmanMH/Bayesball/tree/master/MLBrunscoring_shiny).
 
 
 ### References
