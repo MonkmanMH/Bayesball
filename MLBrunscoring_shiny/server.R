@@ -68,6 +68,8 @@ shinyServer(function(input, output) {
 # +++++ plot: runs scored per game by league
 
 output$plot_MLBtrend <- renderPlot({
+
+
     # plot the data
     MLBRPG <- ggplot(MLB_RPG, aes(x=yearID, y=leagueRPG)) +
              geom_point() +
@@ -151,6 +153,9 @@ output$team_trendline_conf <- renderPrint({ input$team_trendline_conf_sel })
 # +++++ PLOTS: TEAM RUNS SCORED / ALLOWED PER GAME
 
 output$plot_teamTrend <- renderPlot({
+  #
+  req(input$TeamName)
+  
   #
   Team1 <- filter(Teams.merge, franchID == input$TeamName)
   #
