@@ -1,0 +1,50 @@
+---
+title: "BJCP"
+author: "Martin Monkman"
+date: "April 16, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+library(tidyverse)
+
+
+```
+
+
+The BJCP was visualized by David Fischer; he plotted IBU (bitterness) across the bottom but alcohol content on the Y axis. A more logical version (IMHO) would have been to put the SRM on the Y axis.
+
+
+* International bittering units or IBU is a way of measuring the perceived bitterness of beer
+
+* Standard Reference Method or SRM is a system for measuring the color of beer
+index.html
+
+
+#### Summary table
+
+```{r}
+
+styles <- read_csv("styles.csv")
+
+styles %>%
+  filter(`SRM Mid` > 20 & `IBU Mid` < 50) %>%
+  arrange(`IBU Mid`) %>%
+  select(Number, `Style Name`, `Style Category`, `IBU Mid`, `SRM Mid`)
+
+
+```
+
+
+```{r}
+
+ggplot(styles, aes(x=`IBU Mid`, y=`SRM Mid`)) +
+  geom_point()
+
+```
+
