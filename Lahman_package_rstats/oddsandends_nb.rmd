@@ -2,7 +2,7 @@
 title: "Testing Lahman 6.0"
 author: "Martin Monkman"
 date: "2017-07-17"
-output: html_document
+output: html_notebook
 ---
 
 This markdown document incorporates a variety of short scripts that draw on the various tables in the `Lahman` package. (See the Lahman project page on RForge for more details <http://lahman.r-forge.r-project.org/>.)
@@ -41,10 +41,10 @@ system.time(MasterFielding <- inner_join(Fielding, Master, by="playerID"))
 # a count of games played, by position
 MasterFielding <- subset(MasterFielding, POS != "OF" & yearID > "1944")
 #
-MasterFielding %.%
-  group_by(playerID, POS, throws) %.%
-  summarise(gamecount = sum(G)) %.%
-  arrange(desc(gamecount)) %.% 
+MasterFielding %>%
+  group_by(playerID, POS, throws) %>%
+  summarise(gamecount = sum(G)) %>%
+  arrange(desc(gamecount)) %>% 
   head(5)
 #
 MasterFielding <- inner_join(Fielding, Master, by="playerID")
@@ -57,11 +57,11 @@ MasterFielding <- subset(MasterFielding, POS != "OF" & yearID > "1944")
 Now with the MasterFielding table, we can use the `summarise` command (`dplyr`) to generate a new table, "Player_games", that in turn is summarised into a table counting the games played at each position.
 
 ```{r}
-Player_games <- MasterFielding %.%
-  group_by(playerID, POS, throws) %.%
+Player_games <- MasterFielding %>%
+  group_by(playerID, POS, throws) %>%
   summarise(gamecount = sum(G))
-Player_POS <- Player_games %.%
-  group_by(POS, throws) %.%
+Player_POS <- Player_games %>%
+  group_by(POS, throws) %>%
   summarise(playercount = length(gamecount))
 head(Player_POS)
 #
