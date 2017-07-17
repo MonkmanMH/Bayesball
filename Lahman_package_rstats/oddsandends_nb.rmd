@@ -22,9 +22,9 @@ library(tidyverse)
 ```
 
 
-##Master & Fielding
+## Master & Fielding
 
-This uses an inner join to merge the two tables `Master` and `Fielding` into a new data frame "MasterFielding".  The first approach relies on the `merge` instruction, while the second uses the much faster `inner_join` command from `dplyr`.
+This uses an inner join to merge the two tables `Master` and `Fielding` into a new data frame "MasterFielding".  The first approach relies on the `merge` instruction, while the second uses the much faster `dplyr::inner_join` command.
 
 
 ```{r}
@@ -54,7 +54,7 @@ MasterFielding <- subset(MasterFielding, POS != "OF" & yearID > "1944")
 #
 ```
 
-Now with the MasterFielding table, we can use the `summarise` command (`dplyr`) to generate a new table, "Player_games", that in turn is summarised into a table counting the games played at each position.
+Now with the MasterFielding table, we can use the `dplyr::summarise` command to generate a new table, "Player_games", that in turn is summarised into a table counting the games played at each position.
 
 ```{r}
 
@@ -71,7 +71,7 @@ head(Player_POS)
 
 ## Batting (dplyr reference)
 
-This chunk of code is lifted straight from the "Data transformatin" chapter of the online version of the book [_R for Data Science_](http://r4ds.had.co.nz/transform.html) by Garret Grolemund and Hadley Wickham (Specifically, section 5.6.3.
+This chunk of code is lifted straight from the "Data transformation" chapter of the online version of the book [_R for Data Science_](http://r4ds.had.co.nz/transform.html) by Garret Grolemund and Hadley Wickham (Specifically, section 5.6.3.
 
 
 ```{r}
