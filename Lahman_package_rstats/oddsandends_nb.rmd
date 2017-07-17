@@ -114,6 +114,53 @@ batters %>%
 ```
 
 
+### Steven Jay Gould's graph
+
+From Jim Albert's 2015-08-31 blog post, ["Redrawing Steven Jay Gould's Graph"](https://baseballwithr.wordpress.com/category/lahman/).
+
+```{r}
+
+# 1
+S <- summarize(group_by(Batting, yearID, playerID),
+                        H=sum(H), AB=sum(AB),
+                        BB=sum(BB), HBP=sum(HBP, na.rm=TRUE),
+                        SF=sum(SF, na.rm=TRUE))
+
+#2
+ST <- summarize(group_by(Teams, yearID),
+               Games = round(mean(W + L)),
+               min.AB = 3 * Games)
+S2 <- merge(S, ST, by="yearID")
+S.regular <- filter(S2, AB >= min.AB) 
+
+#3
+SD.data <- summarize(group_by(S.regular, yearID),
+                     SD.AVG = sd(H / AB),
+                     SD.OBP = sd((H + BB + HBP) / (AB + BB + HBP + SF)))
+
+
+#4
+ggplot(SD.data, aes(SD.AVG, yearID)) + geom_point() +
+  xlim(.005, .075) + 
+  ggtitle("Standard Deviations of AVG of Regulars (Gould's Display)")
+
+#5
+ggplot(SD.data, aes(yearID, SD.AVG)) + geom_point() + 
+  geom_smooth(se=FALSE, span=0.35) + 
+  ggtitle("Standard Deviations of AVG of Regulars")
+
+#6
+ggplot(SD.data, aes(yearID, SD.OBP)) + 
+  geom_point() + geom_smooth(se=FALSE, span=0.35) +
+  ggtitle("Standard Deviations of OBP of Regulars")
+
+
+
+```
+
+
+
+
 
 `dplyr` [Vignettes page](http://cran.r-project.org/web/packages/dplyr/vignettes/databases.html), under the topic "Postgresql". NOTE: the package `postgres` is not available for R 3.1.1
 
