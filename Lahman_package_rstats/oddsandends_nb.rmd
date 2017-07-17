@@ -57,6 +57,7 @@ MasterFielding <- subset(MasterFielding, POS != "OF" & yearID > "1944")
 Now with the MasterFielding table, we can use the `summarise` command (`dplyr`) to generate a new table, "Player_games", that in turn is summarised into a table counting the games played at each position.
 
 ```{r}
+
 Player_games <- MasterFielding %>%
   group_by(playerID, POS, throws) %>%
   summarise(gamecount = sum(G))
@@ -65,19 +66,59 @@ Player_POS <- Player_games %>%
   summarise(playercount = length(gamecount))
 head(Player_POS)
 #
+
 ```
 
-##Batting (dplyr reference)
+## Batting (dplyr reference)
 
-This chunk of code is lifted from the `dplyr` [Vignettes page](http://cran.r-project.org/web/packages/dplyr/vignettes/databases.html), under the topic "Postgresql". NOTE: the package `postgres` is not available for R 3.1.1
+This chunk of code is lifted straight from the "Data transformatin" chapter of the online version of the book [_R for Data Science_](http://r4ds.had.co.nz/transform.html) by Garret Grolemund and Hadley Wickham (Specifically, section 5.6.3.
+
 
 ```{r}
-if (has_lahman("postgres")) {
-  hflights_postgres <- tbl(src_postgres("hflights"), "hflights")
-}
+
+# Convert to a tibble so it prints nicely
+batting <- as_tibble(Lahman::Batting)
+
+batters <- batting %>% 
+  group_by(playerID) %>% 
+  summarise(
+    ba = sum(H, na.rm = TRUE) / sum(AB, na.rm = TRUE),
+    ab = sum(AB, na.rm = TRUE)
+  )
+
+batters %>% 
+  filter(ab > 100) %>% 
+  ggplot(mapping = aes(x = ab, y = ba)) +
+    geom_point() + 
+    geom_smooth(se = FALSE)
+#> `geom_smooth()` using method = 'gam'
 ```
 
-##Reference list
+A second chunk from _R for Data Science_ (same section).
+
+```{r}
+
+batters %>% 
+  arrange(desc(ba))
+#> # A tibble: 18,659 × 3
+#>    playerID    ba    ab
+#>       <chr> <dbl> <int>
+#> 1 abramge01     1     1
+#> 2 banisje01     1     1
+#> 3 bartocl01     1     1
+#> 4  bassdo01     1     1
+#> 5 birasst01     1     2
+#> 6 bruneju01     1     1
+#> # ... with 1.865e+04 more rows
+
+```
+
+
+
+`dplyr` [Vignettes page](http://cran.r-project.org/web/packages/dplyr/vignettes/databases.html), under the topic "Postgresql". NOTE: the package `postgres` is not available for R 3.1.1
+
+
+## Reference list
 [Lahman at CRAN](http://cran.r-project.org/web/packages/Lahman/index.html)
 
 [Lahman at RForge](http://lahman.r-forge.r-project.org/)
