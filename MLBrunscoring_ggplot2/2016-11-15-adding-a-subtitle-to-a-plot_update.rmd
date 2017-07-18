@@ -44,6 +44,7 @@ Once it's loaded, the data are filtered and summarized using dplyr.
 ```{r, message=FALSE}
 
 library(Lahman)
+
 data(Teams)
 
 
@@ -83,7 +84,7 @@ The way we would set the title, along with X and Y axis labels, would be somethi
 ```{r message=FALSE}
   
 MLBRPGplot +
-  ggtitle("MLB run scoring, 1901-2014") +
+  ggtitle("MLB run scoring, 1901-2016") +
   theme(plot.title = element_text(hjust=0, size=16)) +
   xlab("year") +
   ylab("team runs per game")
@@ -117,8 +118,8 @@ Note that `labs` contains the title, subtitle, caption, as well as the X and Y a
 ```{r, message=FALSE}
 
 MLBRPGplot +
-  labs(title = "MLB run scoring, 1901-2015",
-       subtitle = "Run scoring has been falling for 15 years, reversing a 30 year upward trend",
+  labs(title = "MLB run scoring, 1901-2016",
+       subtitle = "Run scoring in 2016 was the highest in seven years",
        caption = "Source: the Lahman baseball database", 
        x = "year", y = "team runs per game") 
 
