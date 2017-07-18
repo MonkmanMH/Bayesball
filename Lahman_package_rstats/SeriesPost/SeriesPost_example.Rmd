@@ -70,7 +70,7 @@ team_ID_list <- Teams %>%
   mutate(teamID = as.character(teamID)) %>%
   mutate(franchID = as.character(franchID)) %>%
   select(yearID, teamID, franchID, name) %>%
-  distinct(teamID) 
+  distinct(teamID, .keep_all = TRUE) 
 
 # add franchiseName from active_teams to team_names
 team_ID_list <- inner_join(team_ID_list, active_teams, "franchID")
