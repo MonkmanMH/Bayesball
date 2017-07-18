@@ -213,8 +213,9 @@ mutate(players, G_z = (G - mean(G)) / sd(G))
 ```
 
 
+---
 
-### Steven Jay Gould's graph
+### Jim Albert: redrawing Steven Jay Gould's graph
 
 From Jim Albert's 2015-08-31 blog post, ["Redrawing Steven Jay Gould's Graph"](https://baseballwithr.wordpress.com/category/lahman/).
 
