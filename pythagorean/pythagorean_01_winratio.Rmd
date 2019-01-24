@@ -1,0 +1,282 @@
+---
+title: "Pythagorean win expectation (a simple application of the tidyverse)"
+output: html_document
+---
+
+
+At the All Star break, a little over mid-way through the 2018 Major League Baseball (MLB) season, the Seattle Mariners were sitting in second place in the American League West, with a record of 58 wins and 39 losses, a winning percentage of .598. This success had been in spite of a negative run differential; they had scored 2 fewer runs than they had allowed over the 97 games played to that point. They had been losing some games as blowouts, and had been winning a lot of close games.
+
+The Mariners' success had been noted throughout the season; 
+
+* at the end of the first month of the season Jake Mailhot (@jakemailhot) at Lookout Landing wrote ["Just how lucky have the Mariners been?"](https://www.lookoutlanding.com/2018/5/1/17308386/mariners-cluster-luck-april-run-differential); 
+
+* on May 25, Sports Illustrated carried an article ["The Mariners Have Been Very Lucky, But They May Also Be Pretty Good"](https://www.si.com/mlb/2018/05/25/seattle-mariners-al-west)
+
+* at the end of May (2018-05-29) John Trupin (@JohnTrupin) at Lookout Landing wrote ["The Mariners aren’t the first team built on a run differential-beating bullpen"](https://www.lookoutlanding.com/2018/5/29/17406204/the-mariners-arent-the-first-team-built-on-a-run-differential-beating-bullpen-diaz-colome-nicasio).
+
+* on July 3, Jeff Sullivan of Fangraphs suggested ["The Mariners Are Trying to Be the Clutchiest Team on Record"](https://www.fangraphs.com/blogs/the-mariners-are-trying-to-be-the-clutchiest-team-on-record/)
+
+* and on August 20 (roughly 6 weeks from the end of the season), Sullivan followed up with ["The Mariners Still Look Like an All-Time Anomaly"](https://www.fangraphs.com/blogs/the-mariners-still-look-like-an-all-time-anomaly/).
+
+
+Of course, [regression toward the mean](https://en.wikipedia.org/wiki/Regression_toward_the_mean) is a thing, so we might have anticipated that by the season's end the Mariners' win/loss ratio would more closely reflect their run differential. But did it?
+
+
+---
+
+I've written before about run scoring and prevention (index [here](http://bayesball.blogspot.com/search/label/run%20scoring)). This time, I will look at the simplest of the approaches to calculating "win expectation" that have burbled up in the sabermetric community over the years; the other approaches may be worthy of consideration for a future post. This exercise will also give us a way, in subsequent posts, to look at the ways that the statistical programming language **R** works with regression models.
+
+
+## Pythagorean win ratio
+
+
+Bill James, the godfather of sabermetrics, developed the Pythagorean win expectation model ([wikipedia page](https://en.wikipedia.org/wiki/Pythagorean_expectation)). The basic idea is that there is a relationship between the runs a team scores ($RS$) and allows ($RA$), and the proportion of the games that they can be expected to win ($WE$). The equation is expressed thus:
+
+$$ WE = RS^2 / (RS^2 + RA^2)$$
+
+
+
+### an R function
+
+Let's write a little **R** function for this equation...in that way, we can save some typing later.
+
+```{r}
+
+winexp_fun <- function(RS, RA) {
+  RS^2 / (RS^2 + RA^2)
+}
+
+```
+
+
+## The data
+
+
+First, we'll load the packages we need. Note that [**tidyverse**](https://www.tidyverse.org/) contains multiple packages, including the graphing package **ggplot2** and the data wrangling package **dplyr**. 
+
+For this analysis, we'll use the Major League Baseball data package. To get the data, we'll rely on the [CRAN](https://cran.r-project.org/) version of the [**Lahman** package](https://cran.r-project.org/web/packages/Lahman/), which will (at this writing; an update is pending) take us through the 2016 season. 
+
+![](Lahman_hex.png)
+
+
+```{r, setup, message = FALSE}
+
+library(tidyverse)
+
+library(Lahman)
+
+here::here()
+
+```
+
+
+The code chunk below accesses the `Teams` table from the Lahman database, and wrangles it a bit, starting with filtering the series to only those years from 1961 (the start of the expansion era) to the most recent season in the data package.
+
+The code then calculates and adds to the data table (though the `dplyr::mutate` function) two new variables: the team's winning percentage, and using the `winexp_fun` function we wrote above, the win expectation.
+
+```{r}
+
+data(Teams)
+
+Teams_sel <- Teams %>%
+  filter(yearID >= 1961) %>%
+  rename(RS = R) %>%
+  mutate(winpct = W / G, 
+         winexp = winexp_fun(RS, RA))
+
+
+```
+
+
+#### plot
+
+Now we'll use **ggplot2** to look at the relationship between the Pythagorean estimate of win expectation and the actual value of winning percentage. We can do this in a couple of ways: one is to overlay the density plots of the two variables, and the other is an X-Y scatterplot.
+
+First the density plot.
+
+```{r}
+
+plot_winexp_density <- ggplot(data = Teams_sel) +
+  geom_density(aes(x = winexp, colour = "winexp"), show.legend = FALSE) +
+  stat_density(aes(x = winpct, colour = "winpct"),
+               geom = "line", position = "identity", size = 0) +
+  guides(colour = guide_legend(override.aes=list(size=1)))
+
+
+# tips from https://stackoverflow.com/questions/29563375/plotting-line-legend-for-two-density-curves-with-ggplot2
+
+plot_winexp_density
+
+
+# save the plot as a png file
+png("plot_winexp_density.png", width=1024, height=768, res=120)
+plot(plot_winexp_density)
+dev.off()
+
+
+
+```
+
+In the above plot, we can see that there's not a perfect match between the two lines. First, there are gaps between the two lines at either tail of the curve. But more prominently, the blue line (representing the actual winning percentage) isn't a smooth curve at the top--there's a hollow around .500, and increased proportions on either side. Something to investigate another day!
+
+
+Next, the scatter plot. Because we are going to return to the foundations of this plot (i.e. the calculated win expectancy `winexp` as the X axis and the end-of-season final winning percentage `winpct` plotted on the Y axis), we'll create a blank frame in an object called `we_scatterplot`. Once this object is created, we can build a variety of plots by simply overlaying different data representations. (It's not lazy, it's _efficient_.)
+
+Note that there's a few things going on here:
+
+* the use of the `geom_blank` function; usually, we would call `geom_point` for a scatter plot, but in this case we don't want to see the data points. 
+
+* the `coord_fixed` means that the X and Y scales have the units represented by equal length on both (one tenth of a point is the same length on both axes). 
+
+* the `scale_x_continuous` function and its equivalent for Y set the grid marks and length of the two axes.
+
+
+In this approach to plotting, the initial chunk of code creates the underlying framework using `geom_blank()`. The data is in the object but not rendered yet. This will work effectively for our project, since we are going to be plotting different representations of the single data set. The resulting `we_scatterplot` object contains the `winexp` and `winpct` data points, which we will summon by using different `geom_` functions. 
+
+
+```{r}
+
+plot_we_scatterplot <- ggplot(data = Teams_sel, aes(x = winexp, y = winpct)) +
+  geom_blank() +
+  coord_fixed() +
+  scale_x_continuous(breaks = seq(0.2, 0.8, by = 0.1),
+                     limits = c(0.2, 0.8)) +
+  scale_y_continuous(breaks = seq(0.2, 0.8, by = 0.1),
+                     limits = c(0.2, 0.8)) 
+
+plot_we_scatterplot
+
+# save the plot as a png file
+png("plot_we_scatterplot.png", width=1024, height=768, res=120)
+plot(plot_we_scatterplot)
+dev.off()
+
+
+
+```
+
+
+
+Now, we'll render that object but add the `geom_point` so we can see the `winexp` and `winpct` values on an X-Y scatterplot.
+
+```{r}
+
+
+plot_we_scatterplot_point <- plot_we_scatterplot +
+  geom_point()
+
+# save the plot as a png file
+png("plot_we_scatterplot_point.png", width=1024, height=768, res=120)
+plot(plot_we_scatterplot_point)
+dev.off()
+
+
+
+```
+
+In the above plot it's easy to see the strong relationship between the win expectation (the Pythagorean estimate, `winexp` on the X axis) and the winning percentage (`winpct`, on the Y). 
+
+(Yes, this looks a lot like the "Winning Percentage vs Run Differential" plot that appears in [Jeff Sullivan's July 3rd article](https://www.fangraphs.com/blogs/the-mariners-are-trying-to-be-the-clutchiest-team-on-record/). That's because the `winexp` variable above is a permutation of run differential. Same values, different equation.)
+
+To the above plot, let's now add a red line showing where the win expectation, based on the Pythagorean equation, equals the winning percentage recorded by the team (i.e. where the value on the X axis equals the value on the Y.) The individual data points will be dialed back using a shade of grey (another option would be to use the `alpha` aesthetic to make the points somewhat transparent).
+
+
+
+
+```{r}
+
+plot_we_scatterplot_line <-
+plot_we_scatterplot +
+  geom_point(colour = "grey75") +
+  geom_segment(aes(x = 0.25, xend = 0.75, y = 0.25, yend = 0.75), colour = "red", size = 1.5)
+
+plot_we_scatterplot_line
+
+# save the plot as a png file
+png("plot_we_scatterplot_line.png", width=1024, height=768, res=120)
+plot(plot_we_scatterplot_line)
+dev.off()
+
+
+```
+
+The individual data points above the red line are where teams have outperformed their win expectancy, and those below the line have failed to win as many games as the Pythagorean model would predict.
+
+While in general the trend is clear, it's not a perfect relationship. Over a 162 game season, there is still plenty of variation, with some teams above the line (that is, winning more games than the Pythagorean model would predict) and other teams losing more games than the model prediction appearing below the line.
+
+***
+
+### Seattle Mariners, 2018
+
+So how did the 2018 season end for the Seattle Mariners? Did they regress to the mean, or end up one of the clutchiest teams on record?
+
+They ended with a record of 89 wins and 73 loses, a 0.549 record. 
+
+```{r}
+
+Mariner_winpct <- (89 / sum(89 + 73))
+
+Mariner_winpct
+
+```
+
+
+But on the run differential front, they allowed 34 more runs than they scored (677 scored vs. 711 allowed.) Let's plug those numbers into the `winexp_fun()`:
+
+```{r}
+
+RS= 677
+RA = 711
+
+Mariner_winexp <- winexp_fun(RS, RA)
+
+Mariner_winexp
+
+Mariner_winexp * 162
+
+```
+
+The Mariners' predicted winning percentage for the season, based on the Pythagorean model, is  `r Mariner_winexp`, well below their final result. In terms of the number of games the Pythagorean model would predict they'd win in a 162 game season would be `r round(Mariner_winexp * 162, 0)` ... far fewer than the 89 wins they actually registered.
+
+
+Finally, let's add the point (`r Mariner_winexp` , `r Mariner_winpct`) to our X-Y scatterplot:
+
+```{r}
+
+plot_we_scatterplot_SM18 <-
+plot_we_scatterplot_line +
+  geom_point(x = Mariner_winexp, y = Mariner_winpct, size = 3, colour = "#005C5C")
+
+
+plot_we_scatterplot_SM18
+
+# save the plot as a png file
+png("plot_we_scatterplot_SM18.png", width=1024, height=768, res=120)
+plot(plot_we_scatterplot_SM18)
+dev.off()
+
+
+```
+
+That [Northwest Green]() dot well above the line? That's the 2018 Seattle Mariners. They started the season over-performing relative to their run differential, and finished that way...virtually no regression to the mean.
+
+In my next post, I'll use linear regression--that workhorse of statistics, machine learning, artificial intelligence, econometrics, etc.--to look more deeply at the relationship between run differential and winning percentage. As part of this, I'll use the **broom** package to dig into the regression model, and quantify the 2018 Seattle Mariners relative to other teams.
+
+
+
+***
+
+### Further reading
+
+FanGraphs ["BaseRuns" page](https://www.fangraphs.com/depthcharts.aspx?position=BaseRuns)
+
+* [Pythagorean Win-Loss](https://www.fangraphs.com/library/principles/expected-wins-and-losses/)
+
+* [Pythagorean Win-Loss](https://www.fangraphs.com/library/team-record-pythagorean-record-and-base-runs/)
+
+* See also ["BaseRuns" definition](https://www.fangraphs.com/library/features/baseruns/) for alternative measure
+
+Jay Heumann, ["An improvement to the baseball statistic 'Pythagorean Wins'"](https://content.iospress.com/download/journal-of-sports-analytics/jsa0018?id=journal-of-sports-analytics%2Fjsa0018), _Journal of Sports Analytics_ 2 (2016) 49–59
+
+
+-30-

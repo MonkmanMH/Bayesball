@@ -1,0 +1,128 @@
+---
+title: "Mariners 2018 season: game by game"
+output: html_notebook
+---
+
+Cumulative run differential
+
+
+### data
+
+```{r}
+# Seattle Mariners 2018 season
+
+# https://www.baseball-reference.com/teams/SEA/2018-schedule-scores.shtml#all_team_schedule
+
+# <script type="text/javascript" src="//widgets.sports-reference.com/wg.fcgi?css=1&site=br&url=%2Fteams%2FSEA%2F2018-schedule-scores.shtml&div=div_team_schedule"></script>
+
+# copied and pasted into textpad, saved as csv
+
+library(tidyverse)
+
+
+```
+
+
+mutate to add cumulative runs scored, allowed, differential
+
+```{r}
+
+Mariners_2018_gamebygame <- read_csv("Mariners_2018_gamebygame.csv")
+
+
+Mariners_2018_gamebygame <- Mariners_2018_gamebygame %>%
+  mutate(RS_season = cumsum(R),
+         RA_season = cumsum(RA),
+         R_differential = RS_season - RA_season)
+
+Mariners_2018_gamebygame <- 
+  Mariners_2018_gamebygame %>%
+  tidyr::separate(`W-L`, c("Wins", "Loses")) %>%
+  mutate(Wins = as.integer(Wins),
+         Loses = as.integer(Loses),
+         Games = Wins + Loses)
+
+Mariners_2018_gamebygame <-
+  Mariners_2018_gamebygame %>%
+  mutate(winpct = Wins / Games)
+
+```
+
+
+
+the game before the All Star Break
+
+```{r}
+
+Mariners_2018_gamebygame %>%
+  filter(`Gm#` == 97)
+
+```
+
+
+```{r}
+
+
+# Pythagorean function
+winexp_fun <- function(RS, RA) {
+  RS^2 / (RS^2 + RA^2)
+}
+
+
+Mariners_2018_gamebygame <-
+  Mariners_2018_gamebygame %>%
+  mutate(winexp = winexp_fun(RS_season, RA_season))
+
+
+```
+
+
+
+plot!
+
+```{r}
+
+
+
+we_scatterplot <- ggplot() +
+  geom_blank() +
+  coord_fixed() +
+  scale_x_continuous(breaks = seq(0.0, 1.0, by = 0.1),
+                     limits = c(0.0, 1.0)) +
+  scale_y_continuous(breaks = seq(0.0, 1.0, by = 0.1),
+                     limits = c(0.0, 1.0)) 
+
+we_scatterplot
+
+
+```
+
+
+
+```{r}
+
+we_scatterplot_2 <-
+we_scatterplot +
+  geom_segment(aes(x = 0.25, xend = 0.75, y = 0.25, yend = 0.75), colour = "red", size = 1) +
+  geom_point(data = Mariners_2018_gamebygame, mapping = aes(x = winexp, y = winpct))
+
+we_scatterplot_2  
+
+```
+
+
+
+
+```{r}
+
+library(gganimate)
+
+p1 <- ggplot(data = Mariners_2018_gamebygame, aes(winexp, winpct, group = seq_along(Games))) + 
+        geom_point() + 
+        transition_reveal(Games)
+
+p1 <- animate(p1)  
+
+p1
+
+```
