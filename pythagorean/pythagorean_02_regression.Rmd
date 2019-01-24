@@ -62,9 +62,8 @@ Teams <- read_csv(here("data", "Teams.csv"))
 
 Teams_sel <- Teams %>%
   filter(yearID >= 1961) %>%
-  rename(RS = R) %>%
-  mutate(winpct = W / G, 
-         winexp = winexp_fun(RS, RA))
+  rename(RS = R) 
+
 
 
 ```
@@ -112,6 +111,19 @@ WSN,53,27.6,4.76,162,6288,5517,771,1402,284,25,191,737,119,33,631,1289,.254,.335
 Teams_hit_2018 <- read_csv(here("data", "Teams_hit_2018.txt"))
 
 Teams_pit_2018 <- read_csv(here("data", "Teams_pit_2018.txt"))
+
+ls.str(Teams_hit_2018)
+
+```
+
+
+
+add winning percentage and win expectancy
+
+```{r}
+Teams_sel %>%
+  mutate(winpct = W / G, 
+         winexp = winexp_fun(RS, RA))
 
 ```
 
