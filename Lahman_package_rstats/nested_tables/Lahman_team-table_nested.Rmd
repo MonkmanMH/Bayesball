@@ -1,56 +1,26 @@
 ---
-title: "R Notebook"
+title: "nested tables: Lahman example"
 output: html_notebook
 ---
-
-
-A short set of instructions that starts with the "Teams" table in the Lahman database
-and summarizes it for the Shiny app
-
-Thus rather than having the app 
-1. remove unnecessary records (rows) and fields (columns) and
-2. run the calculations for the runs-per-game, runs-allowed-per-game, and indexed versions of those
-the calculations are conducted here.
-
-This will vastly improve the performance of the app.
 
 
 
 
 ```{r packages}
 
+#library(tidyverse)
 library(dplyr)
 library(tidyr)
 library(purrr)
 
-library(Lahman)
 
 ```
 
 
+## gapminder example
 
-CREATE LEAGUE SUMMARY TABLES
+From the "Many Models chapter of" Wickham and Grolemund, [R for Data Science](https://r4ds.had.co.nz/many-models.html)
 
-load the Lahman data table "Teams", filter
-
-
-```{r}
-
-Teams <- Lahman::Teams
-
-# select a sub-set of teams from 1901 [the establishment of the American League] forward to most recent year
-LG_year <- Teams %>%
-  filter(yearID > 1900, lgID != "FL") %>%
-  group_by(yearID, lgID) %>%
-  nest()
-
-LG_year
-
-LG_year$data[[1]]
-
-```
-
-gapminder example
 
 ```{r}
 
@@ -64,23 +34,81 @@ by_country
 
 by_country$data[[1]]
 
+# function to run regression model `lm()` on life expectancy by year
 country_model <- function(df) {
   lm(lifeExp ~ year, data = df)
 }
 
+# single model object version
 models <- purrr::map(by_country$data, country_model)
 
-by_country2 <- by_country %>%
+# nested table version
+# - adds a new column "model" with model object
+by_country <- by_country %>%
   mutate(model = map(data, country_model))
 
-by_country2
+by_country
 
 ```
 
 
-## league run scoring function
 
-a test
+## Lahman version
+
+### Create league summary tables
+
+A short set of instructions that starts with the "Teams" table in the Lahman database
+and summarizes it for [MLB run scoring trends](https://monkmanmh.shinyapps.io/MLBrunscoring_shiny/) Shiny app
+
+Thus rather than having the app 
+1. remove unnecessary records (rows) and fields (columns) and
+2. run the calculations for the runs-per-game, runs-allowed-per-game, and indexed versions of those
+the calculations are conducted here.
+
+This will vastly improve the performance of the app.
+
+
+#### Step 1
+
+load the Lahman data table "Teams"
+
+- filter and 
+
+- add team Runs Per Game (`RPG`), Runs Allowed Per Game (`RAPG`), and Win/Loss percentage (`WLpct`)
+
+- nest, after `group_by()` year and league (`lgID`)
+
+
+Then take a quick look at the first entry ... the American League, 1901
+
+```{r}
+
+#library(Lahman)
+
+Teams <- Lahman::Teams
+
+# select a sub-set of teams from 1901 [the establishment of the American League] forward to most recent year
+LG_year <- Teams %>%
+  filter(yearID > 1900, lgID != "FL") %>%
+  mutate(teamRPG=(R/G), teamRAPG=(RA/G), WLpct=(W/G)) %>%
+  group_by(yearID, lgID) %>%
+  nest()
+
+LG_year
+
+LG_year$data[[1]]
+
+```
+
+
+
+#### Step 2
+
+create a league run scoring function
+
+**Note:**
+
+- In the gapminder example, the variables were called using their names. In this case, for a reason I have not yet determined, we have to specify the data object they are coming from; e.g. for the runs variable `R`, we have to use `df$R` (not just `R`). 
 
 ```{r}
 
@@ -92,6 +120,7 @@ league_year_runs <- map(LG_year$data, leagueRuns_fun)
 
 league_year_runs[[1]]
 
+#check the answer by old school `dplyr` method
 Teams %>%
   filter(yearID == 1901,
          lgID == "AL") %>%
@@ -100,7 +129,11 @@ Teams %>%
 ```
 
 
-the real mccoy
+now for the real thing
+
+**Note:**
+
+- There are two functions, one for Runs and the other for Runs Allowed. This is because I have not yet figured out how to specify two different variables (i.e. the name of the data object and the variable to be used in the function) in the map_() function and successfully have them carried into my calculation functions
 
 ```{r}
 
@@ -113,17 +146,59 @@ leagueRAPG_fun <- function(df) {
   sum(data = df$RA) / sum(data = df$G)
   }
 
+# simple `map` version
 league_year_RPG <- map(LG_year$data, leagueRPG_fun)
 
-LG_year2 <- LG_year %>%
+# embed as new columns in nested data object
+LG_year <- LG_year %>%
   mutate(lgRPG = map_dbl(LG_year$data, leagueRPG_fun),
          lgRAPG = map_dbl(LG_year$data, leagueRAPG_fun))
 
-LG_year2
+LG_year
 
 ```
 
 
+### Step 3
+
+Calculate index of team run scoring against league average 
+
+```{r}
+
+Teams_append <- LG_year %>%
+  unnest() %>%
+  # runs scored index where 100=the league average for that season
+  mutate(R_index = (teamRPG/lgRPG)*100) %>%
+  mutate(R_index.sd = sd(R_index)) %>%
+  mutate(R_z = (R_index - 100)/R_index.sd) %>%
+  # runs allowed
+  mutate(RA_index = (teamRAPG/lgRAPG)*100) %>%
+  mutate(RA_index.sd = sd(RA_index)) %>%
+  mutate(RA_z = (RA_index - 100)/RA_index.sd)
+#
+
+```
+
+
+## Still to do:
+
+- add 2017-2018 data
+
+- calculate MLB x year average
+
+
+- save .R or .feather files 
+
+  - MLB x year average (still needs calculating)
+  
+  - LG x year average
+  
+  - individual team table
+
+
+***
+
+## old code
 
 ```{r}
 
