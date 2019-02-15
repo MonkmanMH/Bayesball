@@ -19,12 +19,14 @@ library(purrr)
 
 ## gapminder example
 
-From the "Many Models chapter of" Wickham and Grolemund, [R for Data Science](https://r4ds.had.co.nz/many-models.html)
+From the "Many Models"" chapter of Wickham and Grolemund, [R for Data Science](https://r4ds.had.co.nz/many-models.html)
 
 
 ```{r}
 
 library(gapminder)
+
+gapminder
 
 by_country <- gapminder %>%
   group_by(country, continent) %>%
@@ -110,11 +112,20 @@ create a league run scoring function
 
 - In the gapminder example, the variables were called using their names. In this case, for a reason I have not yet determined, we have to specify the data object they are coming from; e.g. for the runs variable `R`, we have to use `df$R` (not just `R`). 
 
+
+First, a simple test:
+
 ```{r}
 
+# base R format
 leagueRuns_fun <- function(df) {
   sum(data = df$R)
 }
+
+# dplyr format
+#leagueRuns_fun <- function(df) {
+#  df %>% summarize(sum=sum(R))
+#}
 
 league_year_runs <- map(LG_year$data, leagueRuns_fun)
 
