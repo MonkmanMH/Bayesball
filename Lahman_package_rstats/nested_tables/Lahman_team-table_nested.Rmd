@@ -1,0 +1,179 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+A short set of instructions that starts with the "Teams" table in the Lahman database
+and summarizes it for the Shiny app
+
+Thus rather than having the app 
+1. remove unnecessary records (rows) and fields (columns) and
+2. run the calculations for the runs-per-game, runs-allowed-per-game, and indexed versions of those
+the calculations are conducted here.
+
+This will vastly improve the performance of the app.
+
+
+
+
+```{r packages}
+
+library(dplyr)
+library(tidyr)
+library(purrr)
+
+library(Lahman)
+
+```
+
+
+
+CREATE LEAGUE SUMMARY TABLES
+
+load the Lahman data table "Teams", filter
+
+
+```{r}
+
+Teams <- Lahman::Teams
+
+# select a sub-set of teams from 1901 [the establishment of the American League] forward to most recent year
+LG_year <- Teams %>%
+  filter(yearID > 1900, lgID != "FL") %>%
+  group_by(yearID, lgID) %>%
+  nest()
+
+LG_year
+
+LG_year$data[[1]]
+
+```
+
+gapminder example
+
+```{r}
+
+library(gapminder)
+
+by_country <- gapminder %>%
+  group_by(country, continent) %>%
+  nest()
+
+by_country
+
+by_country$data[[1]]
+
+country_model <- function(df) {
+  lm(lifeExp ~ year, data = df)
+}
+
+models <- purrr::map(by_country$data, country_model)
+
+by_country2 <- by_country %>%
+  mutate(model = map(data, country_model))
+
+by_country2
+
+```
+
+
+## league run scoring function
+
+a test
+
+```{r}
+
+leagueRuns_fun <- function(df) {
+  sum(data = df$R)
+}
+
+league_year_runs <- map(LG_year$data, leagueRuns_fun)
+
+league_year_runs[[1]]
+
+Teams %>%
+  filter(yearID == 1901,
+         lgID == "AL") %>%
+  summarise(leagueruns = sum(R))
+
+```
+
+
+the real mccoy
+
+```{r}
+
+
+leagueRPG_fun <- function(df) {
+  sum(data = df$R) / sum(data = df$G)
+  }
+
+leagueRAPG_fun <- function(df) {
+  sum(data = df$RA) / sum(data = df$G)
+  }
+
+league_year_RPG <- map(LG_year$data, leagueRPG_fun)
+
+LG_year2 <- LG_year %>%
+  mutate(lgRPG = map_dbl(LG_year$data, leagueRPG_fun),
+         lgRAPG = map_dbl(LG_year$data, leagueRAPG_fun))
+
+LG_year2
+
+```
+
+
+
+```{r}
+
+#
+#write.csv(LG_RPG, file="LG_RPG.csv", row.names=FALSE)
+#
+# and a version with just the MLB totals
+MLB_RPG <- Teams %>%
+  filter(yearID > 1900, lgID != "FL") %>%
+  group_by(yearID) %>%
+  summarise(R=sum(R), RA=sum(RA), G=sum(G)) %>%
+  mutate(leagueRPG=R/G, leagueRAPG=RA/G)
+#
+#write.csv(MLB_RPG, file="MLB_RPG.csv", row.names=FALSE)
+#
+# create data frame Teams.merge with league averages
+Teams.merge <-  Teams %>%
+  mutate(teamRPG=(R/G), teamRAPG=(RA/G), WLpct=(W/G)) 
+Teams.merge <- 
+  merge(Teams.merge, LG_RPG, by = c("yearID", "lgID"))
+#
+# create new values to compare the individual team's runs/game compares to the league average that season
+Teams.merge <- Teams.merge %>%
+  # runs scored index where 100=the league average for that season
+  mutate(R_index = (teamRPG/leagueRPG)*100) %>%
+  mutate(R_index.sd = sd(R_index)) %>%
+  mutate(R_z = (R_index - 100)/R_index.sd) %>%
+  # runs allowed
+  mutate(RA_index = (teamRAPG/leagueRAPG)*100) %>%
+  mutate(RA_index.sd = sd(RA_index)) %>%
+  mutate(RA_z = (RA_index - 100)/RA_index.sd)
+#
+# select only those columns which will be required
+#   (port from shiny server file)
+
+Teams.merge <- Teams.merge %>%
+  select(yearID, lgID, franchID, teamID, name, 
+         W, L, WLpct, R.x, RA.x, teamRPG, leagueRPG, 
+         R_index, teamRAPG, leagueRAPG, RA_index)
+
+
+#
+#write.csv(Teams.merge, file="Teams_merge.csv", row.names=FALSE)
+
+# -------------- THE END ...
+
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
