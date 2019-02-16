@@ -8,10 +8,15 @@ output: html_notebook
 
 ```{r packages}
 
-#library(tidyverse)
+# tidyverse packages
 library(dplyr)
-library(tidyr)
 library(purrr)
+library(readr)
+library(tidyr)
+
+library(feather)
+
+#library(Lahman)
 
 
 ```
@@ -72,7 +77,11 @@ This will vastly improve the performance of the app.
 
 #### Step 1
 
-load the Lahman data table "Teams"
+~~load the Lahman data table "Teams"~~
+
+load the data table "Teams" (sourced from the baseballdatabank on github https://github.com/chadwickbureau/baseballdatabank))
+
+
 
 - filter and 
 
@@ -87,18 +96,19 @@ Then take a quick look at the first entry ... the American League, 1901
 
 #library(Lahman)
 
-Teams <- Lahman::Teams
+#Teams <- Lahman::Teams
+Teams <- read_csv("Teams.csv")
 
 # select a sub-set of teams from 1901 [the establishment of the American League] forward to most recent year
-LG_year <- Teams %>%
+Teams_lgyr <- Teams %>%
   filter(yearID > 1900, lgID != "FL") %>%
-  mutate(teamRPG=(R/G), teamRAPG=(RA/G), WLpct=(W/G)) %>%
   group_by(yearID, lgID) %>%
   nest()
 
-LG_year
+Teams_lgyr
 
-LG_year$data[[1]]
+Teams_lgyr$data[[1]]
+
 
 ```
 
@@ -127,7 +137,7 @@ leagueRuns_fun <- function(df) {
 #  df %>% summarize(sum=sum(R))
 #}
 
-league_year_runs <- map(LG_year$data, leagueRuns_fun)
+league_year_runs <- map(Teams_lgyr$data, leagueRuns_fun)
 
 league_year_runs[[1]]
 
@@ -158,14 +168,14 @@ leagueRAPG_fun <- function(df) {
   }
 
 # simple `map` version
-league_year_RPG <- map(LG_year$data, leagueRPG_fun)
+league_year_RPG <- map(Teams_lgyr$data, leagueRPG_fun)
 
 # embed as new columns in nested data object
-LG_year <- LG_year %>%
-  mutate(lgRPG = map_dbl(LG_year$data, leagueRPG_fun),
-         lgRAPG = map_dbl(LG_year$data, leagueRAPG_fun))
+Teams_lgyr <- Teams_lgyr %>%
+  mutate(lgRPG = map_dbl(Teams_lgyr$data, leagueRPG_fun),
+         lgRAPG = map_dbl(Teams_lgyr$data, leagueRAPG_fun))
 
-LG_year
+Teams_lgyr
 
 ```
 
@@ -176,7 +186,7 @@ Calculate index of team run scoring against league average
 
 ```{r}
 
-Teams_append <- LG_year %>%
+Teams_append <- Teams_lgyr %>%
   unnest() %>%
   # runs scored index where 100=the league average for that season
   mutate(R_index = (teamRPG/lgRPG)*100) %>%
