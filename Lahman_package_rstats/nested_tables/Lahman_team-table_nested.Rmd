@@ -161,15 +161,18 @@ now for the real thing
 1st approach: put the sum calculation inside the nested tibble
 
 
+Also note that in order to be consistent with other sources, the number of games played is calculated using the sum of wins (`W`) and losses (`L`), rather than the number of games reported in the `G` variable. 
+
+
 ```{r}
 
 # functions
 leagueRPG_fun <- function(df) {
-  sum(data = df$R) / sum(data = df$G)
+  sum(data = df$R) / (sum(data = df$W) + sum(data = df$L))
   }
 
 leagueRAPG_fun <- function(df) {
-  sum(data = df$RA) / sum(data = df$G)
+  sum(data = df$RA) / (sum(data = df$W) + sum(data = df$L))
   }
 
 
@@ -192,16 +195,9 @@ Teams_lgyr
 
 ```{r}
 
-leagueR_fun <- function(df) {
-  sum(data = df$R)
-}
-
-leagueRA_fun <- function(df) {
-  sum(data = df$RA)
-}
-
+# another function - calculate number fo games played
 leagueG_fun <- function(df) {
-  sum(data = df$G)
+  (sum(data = df$W) + sum(data = df$L))
 }
 
 
@@ -210,11 +206,13 @@ Teams_lgyr <- Teams_lgyr %>%
          lgRA = map_dbl(Teams_lgyr$data, leagueRA_fun),
          lgG = map_dbl(Teams_lgyr$data, leagueG_fun))
 
-Teams_lgyr
 
 Teams_lgyr <- Teams_lgyr %>%
   mutate(lgRPG = (lgR / lgG),
          lgRAPG = (lgRA / lgG))
+
+Teams_lgyr
+
 
 ```
 
@@ -230,7 +228,8 @@ Save feather and csv versions for shiny app
 ```{r}
 
 LG_RPG <- Teams_lgyr %>%
-  select(yearID, lgID, R = lgR, RA = lgRA, G = lgG, leagueRPG = lgRPG, leagueRAPG = lgRAPG)
+  select(yearID, lgID, R = lgR, RA = lgRA, G = lgG, 
+         leagueRPG = lgRPG, leagueRAPG = lgRAPG)
 
 write_csv(LG_RPG, "LG_RPG.csv")
 write_feather(LG_RPG, "LG_RPG.feather")
@@ -240,7 +239,7 @@ write_feather(LG_RPG, "LG_RPG.feather")
 
 ### repeat for MLB total
 
-This only differs in the level of nesting; instead of year and league, it's only year.
+This only differs in the level of nesting; instead of grouping by year and league, it's only year  (`yearID`).
 
 ```{r}
 
@@ -270,7 +269,8 @@ Save feather and csv versions for shiny app
 ```{r}
 
 MLB_RPG <- Teams_lgyr %>%
-  select(yearID, R = mlbR, RA = mlbRA, G = mlbG, leagueRPG = mlbRPG, leagueRAPG = mlbRAPG)
+  select(yearID, R = mlbR, RA = mlbRA, G = mlbG, 
+         leagueRPG = mlbRPG, leagueRAPG = mlbRAPG)
 
 write_csv(MLB_RPG, "MLB_RPG.csv")
 write_feather(MLB_RPG, "MLB_RPG.feather")
@@ -283,21 +283,24 @@ write_feather(MLB_RPG, "MLB_RPG.feather")
 
 Calculate index of team run scoring against league average 
 
+Note that we start with `unnest()` and create a new object, `Teams_append` ... a tibble with all of the variables exposed.
+
+
 ```{r}
 
 Teams_append <- Teams_lgyr %>%
   unnest() %>%
-  mutate(teamRPG=(R/G), 
-         teamRAPG=(RA/G), 
-         WLpct=(W/G)) %>%
+  mutate(teamRPG=(R / (W + L)), 
+         teamRAPG=(RA / (W + L)), 
+         WLpct=(W / (W + L))) %>%
   # runs scored index where 100=the league average for that season
-  mutate(R_index = (teamRPG/lgRPG)*100) %>%
+  mutate(R_index = (teamRPG / lgRPG) * 100) %>%
   mutate(R_index.sd = sd(R_index)) %>%
-  mutate(R_z = (R_index - 100)/R_index.sd) %>%
+  mutate(R_z = (R_index - 100) / R_index.sd) %>%
   # runs allowed
-  mutate(RA_index = (teamRAPG/lgRAPG)*100) %>%
+  mutate(RA_index = (teamRAPG / lgRAPG) * 100) %>%
   mutate(RA_index.sd = sd(RA_index)) %>%
-  mutate(RA_z = (RA_index - 100)/RA_index.sd)
+  mutate(RA_z = (RA_index - 100) / RA_index.sd)
 #
 
 Teams_append
@@ -306,74 +309,26 @@ Teams_append
 
 
 
+Save feather and csv versions for shiny app
 
-## Still to do:
-
-- calculate MLB x year average
-
-
-- save .R or .feather files 
-
-  - MLB x year average (still needs calculating)
-  
-  - LG x year average
-  
-  - individual team table
-
-
-***
-
-## old code
+- note selection and renaming of variables to correspond with shiny app names
 
 ```{r}
 
-#
-#write.csv(LG_RPG, file="LG_RPG.csv", row.names=FALSE)
-#
-# and a version with just the MLB totals
-MLB_RPG <- Teams %>%
-  filter(yearID > 1900, lgID != "FL") %>%
-  group_by(yearID) %>%
-  summarise(R=sum(R), RA=sum(RA), G=sum(G)) %>%
-  mutate(leagueRPG=R/G, leagueRAPG=RA/G)
-#
-#write.csv(MLB_RPG, file="MLB_RPG.csv", row.names=FALSE)
-#
-# create data frame Teams.merge with league averages
-Teams.merge <-  Teams %>%
-  mutate(teamRPG=(R/G), teamRAPG=(RA/G), WLpct=(W/G)) 
-Teams.merge <- 
-  merge(Teams.merge, LG_RPG, by = c("yearID", "lgID"))
-#
-# create new values to compare the individual team's runs/game compares to the league average that season
-Teams.merge <- Teams.merge %>%
-  # runs scored index where 100=the league average for that season
-  mutate(R_index = (teamRPG/leagueRPG)*100) %>%
-  mutate(R_index.sd = sd(R_index)) %>%
-  mutate(R_z = (R_index - 100)/R_index.sd) %>%
-  # runs allowed
-  mutate(RA_index = (teamRAPG/leagueRAPG)*100) %>%
-  mutate(RA_index.sd = sd(RA_index)) %>%
-  mutate(RA_z = (RA_index - 100)/RA_index.sd)
-#
-# select only those columns which will be required
-#   (port from shiny server file)
+Teams_merge <- Teams_append %>%
+  select(yearID, lgID, franchID, teamID, name,
+         W, L, WLpct, R.x = R, RA.x = RA, 
+         teamRPG, leagueRPG = lgRPG, R_index,
+         teamRAPG, leagueRAPG = lgRAPG, RA_index)
 
-Teams.merge <- Teams.merge %>%
-  select(yearID, lgID, franchID, teamID, name, 
-         W, L, WLpct, R.x, RA.x, teamRPG, leagueRPG, 
-         R_index, teamRAPG, leagueRAPG, RA_index)
+Teams_merge
 
-
-#
-#write.csv(Teams.merge, file="Teams_merge.csv", row.names=FALSE)
-
-# -------------- THE END ...
+write_csv(MLB_RPG, "MLB_RPG.csv")
+write_feather(MLB_RPG, "MLB_RPG.feather")
 
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
 
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+-30-
+
