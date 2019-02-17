@@ -60,19 +60,20 @@ by_country
 
 
 
-## Lahman version
+## MLB Lahman version
 
 ### Create league summary tables
 
 A short set of instructions that starts with the "Teams" table in the Lahman database
 and summarizes it for [MLB run scoring trends](https://monkmanmh.shinyapps.io/MLBrunscoring_shiny/) Shiny app
 
-Thus rather than having the app 
-1. remove unnecessary records (rows) and fields (columns) and
-2. run the calculations for the runs-per-game, runs-allowed-per-game, and indexed versions of those
-the calculations are conducted here.
+Thus rather than having the app do the work of
 
-This will vastly improve the performance of the app.
+1. remove unnecessary records (rows) and fields (columns) and
+
+2. run the calculations for the runs-per-game, runs-allowed-per-game, and indexed versions of those,
+
+the calculations are conducted here. This will vastly improve the performance of the app.
 
 
 #### Step 1
@@ -219,6 +220,64 @@ Teams_lgyr <- Teams_lgyr %>%
 
 
 
+#### save LG_RPG files
+
+
+Save feather and csv versions for shiny app
+
+- note renaming of variables to correspond with shiny app names
+
+```{r}
+
+LG_RPG <- Teams_lgyr %>%
+  select(yearID, lgID, R = lgR, RA = lgRA, G = lgG, leagueRPG = lgRPG, leagueRAPG = lgRAPG)
+
+write_csv(LG_RPG, "LG_RPG.csv")
+write_feather(LG_RPG, "LG_RPG.feather")
+
+```
+
+
+### repeat for MLB total
+
+This only differs in the level of nesting; instead of year and league, it's only year.
+
+```{r}
+
+Teams_lgyr <- Teams_lgyr %>%
+  unnest() %>%
+  group_by(yearID) %>%
+  nest()
+
+Teams_lgyr
+
+Teams_lgyr <- Teams_lgyr %>%
+  mutate(mlbR = map_dbl(Teams_lgyr$data, leagueR_fun),
+         mlbRA = map_dbl(Teams_lgyr$data, leagueRA_fun),
+         mlbG = map_dbl(Teams_lgyr$data, leagueG_fun),
+         mlbRPG = (mlbR / mlbG),
+         mlbRAPG = (mlbRA / mlbG))
+
+Teams_lgyr
+
+```
+
+
+Save feather and csv versions for shiny app
+
+- note renaming of variables to correspond with shiny app names
+
+```{r}
+
+MLB_RPG <- Teams_lgyr %>%
+  select(yearID, R = mlbR, RA = mlbRA, G = mlbG, leagueRPG = mlbRPG, leagueRAPG = mlbRAPG)
+
+write_csv(MLB_RPG, "MLB_RPG.csv")
+write_feather(MLB_RPG, "MLB_RPG.feather")
+
+```
+
+
 
 ### Step 3
 
@@ -245,9 +304,6 @@ Teams_append
 
 ```
 
-
-
-# save LG_RPG files
 
 
 
