@@ -156,9 +156,13 @@ now for the real thing
 
 - There are two functions, one for Runs and the other for Runs Allowed. This is because I have not yet figured out how to specify two different variables (i.e. the name of the data object and the variable to be used in the function) in the map_() function and successfully have them carried into my calculation functions
 
+
+1st approach: put the sum calculation inside the nested tibble
+
+
 ```{r}
 
-
+# functions
 leagueRPG_fun <- function(df) {
   sum(data = df$R) / sum(data = df$G)
   }
@@ -166,6 +170,7 @@ leagueRPG_fun <- function(df) {
 leagueRAPG_fun <- function(df) {
   sum(data = df$RA) / sum(data = df$G)
   }
+
 
 # simple `map` version
 league_year_RPG <- map(Teams_lgyr$data, leagueRPG_fun)
@@ -177,7 +182,42 @@ Teams_lgyr <- Teams_lgyr %>%
 
 Teams_lgyr
 
+
+
 ```
+
+
+2nd approach: sum league total runs, runs allowed, and games, then RPG and RAPG outside the nested tibbles
+
+```{r}
+
+leagueR_fun <- function(df) {
+  sum(data = df$R)
+}
+
+leagueRA_fun <- function(df) {
+  sum(data = df$RA)
+}
+
+leagueG_fun <- function(df) {
+  sum(data = df$G)
+}
+
+
+Teams_lgyr <- Teams_lgyr %>%
+  mutate(lgR = map_dbl(Teams_lgyr$data, leagueR_fun),
+         lgRA = map_dbl(Teams_lgyr$data, leagueRA_fun),
+         lgG = map_dbl(Teams_lgyr$data, leagueG_fun))
+
+Teams_lgyr
+
+Teams_lgyr <- Teams_lgyr %>%
+  mutate(lgRPG = (lgR / lgG),
+         lgRAPG = (lgRA / lgG))
+
+```
+
+
 
 
 ### Step 3
@@ -188,6 +228,9 @@ Calculate index of team run scoring against league average
 
 Teams_append <- Teams_lgyr %>%
   unnest() %>%
+  mutate(teamRPG=(R/G), 
+         teamRAPG=(RA/G), 
+         WLpct=(W/G)) %>%
   # runs scored index where 100=the league average for that season
   mutate(R_index = (teamRPG/lgRPG)*100) %>%
   mutate(R_index.sd = sd(R_index)) %>%
@@ -198,12 +241,17 @@ Teams_append <- Teams_lgyr %>%
   mutate(RA_z = (RA_index - 100)/RA_index.sd)
 #
 
+Teams_append
+
 ```
 
 
-## Still to do:
 
-- add 2017-2018 data
+# save LG_RPG files
+
+
+
+## Still to do:
 
 - calculate MLB x year average
 
