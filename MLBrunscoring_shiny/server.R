@@ -1,7 +1,11 @@
 # Run scoring in Shiny -- server
 #
 # written by Martin Monkman
-# last update: 2015-01-04
+# last update: 2019-02-18
+#
+# Copyright 2019 Martin Monkman
+# license: MIT  https://opensource.org/licenses/MIT
+#
 #
 #
 # ####################
@@ -9,15 +13,16 @@
 # package load 
 library(shiny)
 library(dplyr)
-library(reshape)
+library(reshape2)
 library(ggplot2)
+library(feather)
 #
 # turn off error messages
 options(show.error.messages=F)
 #
-Teams.merge <- read.csv("Teams_merge.csv", header=TRUE)
-MLB_RPG <- read.csv("MLB_RPG.csv", header=TRUE)
-LG_RPG <- read.csv("LG_RPG.csv", header=TRUE)
+Teams.merge <- read_feather("Teams_merge.feather")
+MLB_RPG <- read_feather("MLB_RPG.feather")
+LG_RPG <- read_feather("LG_RPG.feather")
 
 # create a list of the team names
 TeamNames <- Teams.merge %>%

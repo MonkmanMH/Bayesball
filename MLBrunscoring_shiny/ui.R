@@ -1,7 +1,11 @@
 # Run scoring in Shiny -- ui
 #
 # written by Martin Monkman
-# last update: 2014-11-09
+# last update: 2019-02-18
+#
+# Copyright 2019 Martin Monkman
+# license: MIT  https://opensource.org/licenses/MIT
+#
 #
 # resources used & plagarized
 #  - RStudio's widget gallery http://shiny.rstudio.com/gallery/widget-gallery.html

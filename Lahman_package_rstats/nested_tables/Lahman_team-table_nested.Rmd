@@ -330,8 +330,6 @@ Teams_append
 
 ```
 
-
-
 Save feather and csv versions for shiny app
 
 - note selection and renaming of variables to correspond with shiny app names
@@ -346,8 +344,8 @@ Teams_merge <- Teams_append %>%
 
 Teams_merge
 
-write_csv(MLB_RPG, "MLB_RPG.csv")
-write_feather(MLB_RPG, "MLB_RPG.feather")
+write_csv(Teams_merge, "Teams_merge.csv")
+write_feather(Teams_merge, "Teams_merge.feather")
 
 ```
 
