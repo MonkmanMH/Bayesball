@@ -1,7 +1,13 @@
 ---
 title: "nested tables: Lahman example"
-output: html_notebook
+author: "Martin Monkman"
+date: "February 18, 2019"
+output: ''
 ---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
 
 
 
@@ -108,6 +114,13 @@ Teams_lgyr <- Teams %>%
 
 Teams_lgyr
 
+```
+
+
+a quick peek into the first nested table
+
+```{r}
+
 Teams_lgyr$data[[1]]
 
 
@@ -195,7 +208,15 @@ Teams_lgyr
 
 ```{r}
 
-# another function - calculate number fo games played
+# more functions - individual league by year totals
+leagueR_fun <- function(df) {
+  sum(data = df$R)
+}
+
+leagueRA_fun <- function(df) {
+  sum(data = df$RA)
+}
+
 leagueG_fun <- function(df) {
   (sum(data = df$W) + sum(data = df$L))
 }
@@ -230,6 +251,8 @@ Save feather and csv versions for shiny app
 LG_RPG <- Teams_lgyr %>%
   select(yearID, lgID, R = lgR, RA = lgRA, G = lgG, 
          leagueRPG = lgRPG, leagueRAPG = lgRAPG)
+
+LG_RPG
 
 write_csv(LG_RPG, "LG_RPG.csv")
 write_feather(LG_RPG, "LG_RPG.feather")
