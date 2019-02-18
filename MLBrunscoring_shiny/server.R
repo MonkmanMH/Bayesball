@@ -84,7 +84,7 @@ output$plot_MLBtrend <- renderPlot({
              ylim(3, 6) +
              ggtitle(paste("Major League Baseball: runs per team per game", 
                            input$lg_yearrange_input[1], "-", input$lg_yearrange_input[2])) +
-             xlab("year") + ylab("runs per game")  
+             xlab("year") + ylab("runs per team per game")  
 
     # plot each league separately?
     if (input$leaguesplitselect == TRUE) {

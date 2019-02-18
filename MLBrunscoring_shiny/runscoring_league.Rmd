@@ -1,0 +1,14 @@
+---
+title: "MLBrunscoring_league"
+author: "Martin Monkman"
+date: "2019-02-18"
+output: html_document
+---
+
+#### 
+
+There's something about baseball that gives the illusion that it has an immutable nature, that the game played today is the same is it was a hundred (or more) years ago. And while there are some elements that have not changed, such as the 90 feet between the bases and three-strikes-and-you're-out, other elements have been constantly shifting. 
+
+One such change is the number of runs scored by each team per game. And those changes have been different in the National League (NL) and the American League (AL).
+
+This application provides a way to explore those changes over time, and on the "team plot" tab, a way to see how each of the 30 Major League Baseball teams has performed relative to the shifting league averages, both in terms of the number of runs they have scored, and how many runs they have allowed.

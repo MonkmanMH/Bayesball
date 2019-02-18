@@ -20,6 +20,8 @@ shinyUI(navbarPage("MLB run scoring trends",
                             #
                             titlePanel("Per-game run scoring by league"),
                             #
+                              includeMarkdown("runscoring_league.Rmd"),
+                            #
                             # Sidebar with a dropdown list of ministry names
                             sidebarLayout(
                               
