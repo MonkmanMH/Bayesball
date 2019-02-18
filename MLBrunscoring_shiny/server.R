@@ -12,9 +12,11 @@
 #
 # package load 
 library(shiny)
+# tidyverse
 library(dplyr)
-library(reshape2)
+library(tidyr)
 library(ggplot2)
+# and beyond
 library(feather)
 #
 # turn off error messages
@@ -170,7 +172,7 @@ output$plot_teamTrend <- renderPlot({
   #
   Team2 <- Team1 %>%
     select(yearID, teamID, R_index, RA_index) %>%
-    melt(id=c("yearID", "teamID"))
+     tidyr::gather(c("R_index", "RA_index"), key = "variable", value = "value")
   #
   output$team_yearrange <- renderUI({
     sliderInput("team_yearrange_input", label = h4("Select year range to plot"), 
