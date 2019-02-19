@@ -119,7 +119,7 @@ output$MLBtable <- renderDataTable({
     RPG_data <- as.data.frame(LG_RPG)
   } else {
     RPG_data <- as.data.frame(MLB_RPG)
-    }
+    } 
 })
 
 #
