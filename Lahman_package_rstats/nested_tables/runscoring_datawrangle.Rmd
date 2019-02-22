@@ -40,7 +40,7 @@ At one point in the app's code, I had used the now-retired [`reshape`](https://c
 
 The app relied on some pre-wrangled csv files; these have been replaced by files stored using the [.feather format](https://blog.rstudio.com/2016/03/29/feather/), which makes for a signficant performance improvement. 
 
-Here's a speed test comparison, using my home PC:
+Here's a speed test comparison of the largest file (by both columns and rows), using my home PC:
 
 ```{r}
 
@@ -78,9 +78,13 @@ It's always valuable to have your end-state in mind when working through a multi
 
 #### Read the data
 
-The first step is to read in the data. 
+The first step is to read in the data.
 
-- the data table "Teams" is sourced from the baseballdatabank on github https://github.com/chadwickbureau/baseballdatabank))
+- It comes from the "Lahman", so-named after the originator and hoster, Sean Lahman. [His website](http://www.seanlahman.com/baseball-archive/statistics/) has the current version of the database, as well as an archive of previous versions.
+
+- The data table "Teams" is sourced from the _baseballdatabank_ on github https://github.com/chadwickbureau/baseballdatabank))
+
+- There is an R package with the Lahman database, but it's currently two seasons behind the source files.
 
 
 ```{r}
@@ -95,10 +99,6 @@ Teams
 The table above has far more variables than what we need, and some that we'll have to calculate. 
 
 
-
-
-
-## MLB Lahman version
 
 ### Create league summary tables
 
@@ -123,15 +123,10 @@ At this point, the code
 
 - filters out the years prior to 1901 and [the misbegotten Federal League](https://en.wikipedia.org/wiki/Federal_League).
 
-- and then creates a nested data table, following the `group_by()` year and league (`lgID`)
+- and then creates a nested data table, starting with the `group_by()` year and league (`lgID`)
 
 
 ```{r}
-
-#library(Lahman)
-
-#Teams <- Lahman::Teams
-Teams <- read_csv("Teams.csv")
 
 # select a sub-set of teams from 1901 [the establishment of the American League] forward to most recent year
 Teams_lgyr <- Teams %>%
@@ -157,7 +152,7 @@ Teams_lgyr$data[[1]]
 
 #### Step 2
 
-create a league run scoring function
+This step creates a league run scoring function, and then applies that using the `purrr::map()` function.
 
 **Note:**
 
