@@ -55,6 +55,10 @@ shinyUI(navbarPage("MLB run scoring trends",
                               # ---- end sidebarPanel
                               # 
                               mainPanel(
+                                tags$style(type="text/css",
+                                           ".shiny-output-error { visibility: hidden; }",
+                                           ".shiny-output-error:before { visibility: hidden; }"),
+                                #
                                 h4("Runs per game: chart"),
                                 plotOutput("plot_MLBtrend"),
                                 br(), 
@@ -171,7 +175,7 @@ shinyUI(navbarPage("MLB run scoring trends",
 # -+-+-+-+-+ MORE
 
                    #
-                   navbarMenu("More",
+                   navbarMenu("documentation",
                               tabPanel("reference",
                                        fluidRow(
                                          column(12,
@@ -182,7 +186,7 @@ shinyUI(navbarPage("MLB run scoring trends",
                                         column(12,
                                         includeMarkdown("runscoring_documentation.Rmd")
                                       ))),
-                              tabPanel("data wrangle",
+                              tabPanel("data wrangle update",
                                        fluidRow(
                                          column(12,
                                          includeHTML("runscoring_datawrangle.html")

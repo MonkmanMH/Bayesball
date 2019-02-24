@@ -10,7 +10,7 @@ output: html_document
 
 #### bayesball.blogspot.com
 
-Earlier versions of the analysis of run scoring trends in Major League Baseball can be found on my blog bayesball.blogspot.com.  In reverse order of publication, they are:
+Earlier versions of the analysis of run scoring trends in Major League Baseball can be found on my blog [bayesball.blogspot.com](bayesball.blogspot.com).  In reverse order of publication, they are:
 
 * ["Updated Shiny app"](http://bayesball.blogspot.com/2017/03/updated-shiny-app.html), 2017-03-26
 

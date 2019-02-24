@@ -65,9 +65,15 @@ Then, read in the data.
 - There is an [R package with the Lahman database](https://github.com/cdalzell/Lahman), but it's currently two seasons behind the source files.
 
 
-```{r warning=FALSE, message=FALSE}
+```{r}
 
-Teams <- read_csv("Teams.csv")
+Teams <- read_csv("Teams.csv",
+                  col_types = cols(
+                    divID = col_character(),
+                    DivWin = col_character(),
+                    SF = col_character(),
+                    WCWin = col_character()
+                  ))
 
 head(Teams)
 
@@ -329,7 +335,6 @@ Teams_append
 
 ```
 
-#### i. save file for shiny app
 
 
 In this the final step, we first create a new data object `Teams_merge`
