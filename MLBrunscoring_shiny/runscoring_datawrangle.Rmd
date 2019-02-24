@@ -5,27 +5,6 @@ date: "February 24, 2019"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-
-
-
-```{r packages}
-
-# tidyverse packages
-library(dplyr)
-library(purrr)
-library(readr)
-library(tidyr)
-
-library(feather)
-
-#library(Lahman)
-
-
-```
 
 
 The new Major League Baseball season will soon begin, which means it's time to look back and update my run scoring trends data visualization application, built using RStudio's shiny package.
@@ -33,19 +12,21 @@ The new Major League Baseball season will soon begin, which means it's time to l
 You can find the app here:
 [https://monkmanmh.shinyapps.io/MLBrunscoring_shiny/](https://monkmanmh.shinyapps.io/MLBrunscoring_shiny/)
 
-This update gave me the opportunity to make some cosmetic tweaks to the front end, but more consequential changes to the code under the hood.
+The github repo for this app is [https://github.com/MonkmanMH/Bayesball/tree/master/MLBrunscoring_shiny](https://github.com/MonkmanMH/Bayesball/tree/master/MLBrunscoring_shiny)
+
+This update gave me the opportunity to make some cosmetic tweaks to the front end, and more consequential changes to the code under the hood.
 
 
 ## 1. retired `reshape`, using `tidyr`
 
-At one point in the app's code, I had used the now-retired [`reshape`](https://cran.r-project.org/web/packages/reshape/index.html) package to melt a data table. Although this still works, I opted to update the code to use the `gather()` function in the package `tidyr`. 
+At one point in the app's code, I had used the now-retired [`reshape`](https://cran.r-project.org/web/packages/reshape/index.html) package to melt a data table. Although this still works, I opted to update the code to use the `gather()` function in the package `tidyr`, part of [the tidyverse](https://www.tidyverse.org/). 
 
 ## 2. `feather` instead of csv
 
 The app relied on some pre-wrangled csv files; these have been replaced by files stored using the [.feather format](https://blog.rstudio.com/2016/03/29/feather/), which makes for a signficant performance improvement. 
 
 
-## 3. Wrangling: the calculation of team and league run scoring averages
+## 3. wrangling: the calculation of team and league run scoring averages
 
 The goal is to create data tables that minimize the amount of processing the app has to do. 
 
@@ -58,20 +39,34 @@ For this iteration, preparing the data for the app is now done using `tidyr::nes
 It's always valuable to have your end-state in mind when working through a multi-step data wrangle like this. My goal as the values shown on the "team plot" tab of the app -- an index value (i.e. a percentage) of a team's average runs scored (and runs allowed) compared to the league run scoring rate, for a single season.
 
 
+### a. Load packages and read the data
 
-### a. Read the data
 
-The first step is to read in the data.
+First, load the necessary packages, the first four of which are part of the tidyverse.
 
-- It comes from the "Lahman", so-named after the originator and hoster, Sean Lahman. [His website](http://www.seanlahman.com/baseball-archive/statistics/) has the current version of the database, as well as an archive of previous versions.
+```{r warning=FALSE, message=FALSE}
 
-- The data table "Teams" is sourced from the _baseballdatabank_ on github https://github.com/chadwickbureau/baseballdatabank))
+# tidyverse packages
+library(dplyr)
+library(purrr)
+library(readr)
+library(tidyr)
+
+library(feather)
+
+```
+
+Then, read in the data.
+
+- It comes from the "Lahman" baseball database, so-named after the originator and hoster, Sean Lahman. [His website](http://www.seanlahman.com/baseball-archive/statistics/) has the current version of the database, as well as an archive of previous versions.
+
+- The data table "Teams" is sourced from the _baseballdatabank_ on github https://github.com/chadwickbureau/baseballdatabank)); I've also saved in the github repo for this app.
 
 - There is an [R package with the Lahman database](https://github.com/cdalzell/Lahman), but it's currently two seasons behind the source files.
 
 
-```{r}
-#Teams <- Lahman::Teams
+```{r warning=FALSE, message=FALSE}
+
 Teams <- read_csv("Teams.csv")
 
 head(Teams)

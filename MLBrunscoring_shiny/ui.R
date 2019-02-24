@@ -181,7 +181,13 @@ shinyUI(navbarPage("MLB run scoring trends",
                                       fluidRow(
                                         column(12,
                                         includeMarkdown("runscoring_documentation.Rmd")
-                                      )))
+                                      ))),
+                              tabPanel("data wrangle",
+                                       fluidRow(
+                                         column(12,
+                                         includeHTML("runscoring_datawrangle.html")
+                                       )))   
+                              
                    )
                    # ----- end navbarMenu "More"
 ))
