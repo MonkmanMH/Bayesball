@@ -1,0 +1,123 @@
+---
+title: "baseball salaries"
+output: html_notebook
+---
+
+Data source: baseball-reference.com
+
+Annual league stats (2020 example):
+https://www.baseball-reference.com/leagues/MLB/2020.shtml
+
+# pay and attendance
+https://www.baseball-reference.com/leagues/MLB/2020-misc.shtml
+
+# w/l
+https://www.baseball-reference.com/leagues/MLB/2019-standings.shtml
+
+```{r setup}
+
+library(dplyr)
+library(stringr)
+library(ggplot2)
+```
+
+
+```{r make_bat}
+
+#files <- dir("data_source/", pattern = "\\.xls*", full.names = TRUE)
+#files
+
+files <- dir("data_edit/", pattern = "bat_\\d\\d\\d\\d\\.xls*", full.names = TRUE)
+files
+
+df_list <- vector("list", length(files))
+df_list
+
+for (i in seq_along(files)) {
+  df_list[[i]] <- readxl::read_excel(files[[i]])
+  df_list[[i]]$year_num = (str_extract(files[[i]], "\\d\\d\\d\\d"))
+}
+
+
+df_bat <- bind_rows(df_list)
+df_bat <- df_bat %>% 
+  janitor::clean_names()
+
+
+```
+
+```{r make_standings}
+
+
+files <- dir("data_edit/", pattern = "standings_\\d\\d\\d\\d\\.csv", full.names = TRUE)
+files
+
+df_list <- vector("list", length(files))
+
+
+for (i in seq_along(files)) {
+  df_list[[i]] <- readr::read_csv(files[[i]])
+  df_list[[i]]$year_num = (str_extract(files[[i]], "\\d\\d\\d\\d"))
+  names(df_list[[1]][25]) <- "lt_eq_500"
+  names(df_list[[1]][26]) <- "gt_500"
+}
+
+
+df_stand <- bind_rows(df_list)
+df_stand <- df_stand %>% 
+  janitor::clean_names()
+
+
+View(df_stand)
+
+```
+
+
+```{r make_pay}
+
+files <- dir("data_edit/", pattern = "pay_\\d\\d\\d\\d\\.xls*", full.names = TRUE)
+files
+
+df_list <- vector("list", length(files))
+df_list
+
+for (i in seq_along(files)) {
+  df_list[[i]] <- readxl::read_excel(files[[i]])
+  df_list[[i]]$year_num = (str_extract(files[[i]], "\\d\\d\\d\\d"))
+}
+
+
+df_pay <- bind_rows(df_list)
+df_pay <- df_pay %>% 
+  janitor::clean_names()
+
+# calculate team payroll as pct of league average
+
+df_pay <- df_pay %>% 
+  group_by(year_num) %>% 
+  mutate(league_avg_pay = mean(est_payroll)) %>% 
+  ungroup() %>% 
+  mutate(pay_league_index = est_payroll / league_avg_pay * 100)
+
+View(df_pay)
+
+df_pay %>% 
+  ggplot(aes(x = pay_league_index)) +
+    geom_histogram()
+
+```
+
+
+## join tables
+
+```{r}
+
+df_pay_wl <- df_pay %>% 
+  left_join(df_stand, by = c("tm", "year_num")) %>% 
+  select(year_num, tm, attend_g, est_payroll, pay_pct_league, w, l, w_l_percent)
+
+readr::write_csv(df_pay_wl, "mlb_pay_wl.csv")
+readr::write_rds(df_pay_wl, "mlb_pay_wl.rds")
+
+```
+

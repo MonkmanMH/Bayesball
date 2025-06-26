@@ -1,0 +1,146 @@
+---
+title: "Moneyball"
+output: html_document
+author: "Martin Monkman"
+---
+
+The movie _Moneyball_ (based on the book of the same name) tells the story of the 2002 Oakland Athletics baseball team. That year, the team won 103 of its 162 games (a win-loss percentage^[Yes, I know this isn't a percentage but that's the term used!] of 0.636). Only the New York Yankees had a better record; the Yankees won 103 but played one fewer due to a rain-out, so finished with a win-loss percentage of 0.640. 
+
+Oakland had a payroll of $40 million (only Tampa Bay and Montreal, at $34.4 and $38.7 million, were lower). The Yankees, by contrast, had the highest payroll at $125.9 million, with a roster full of star players.
+
+Another way to think of the team payroll is relative to the Major League Baseball average. The Yankees payroll was 186% of the league average—for every 100 dollars the average team spent, the Yankees spent $186. The next closest team in spending was the Boston Red Sox, whose salary bill was 160% of the league average at $108 million. Oakland, by contrast, spent 59% of the league average—while the average team spent $100 dollars, the Athletics were constrained to spending $60.
+
+And yet these two teams—one packed with expensive star players, and the other staffed with players that other teams had cast off—managed to have very similar and enormously successful seasons. 
+
+It's a great story, full of data analysis that identified those players who were undervalued in the market.
+
+![Moneyball poster](moneyball_pitt.jpg){width=25%}
+
+
+Let's use the tidyverse packages and some elements in base R to explore the relationship between payroll spending and team success.
+
+```{r setup, message=FALSE}
+
+library(tidyverse)
+
+```
+
+The next thing we'll do is read in the data file. For this we will use "mlb_pay_wl.csv".
+
+(This data was compiled from [baseball-reference.com](https://www.baseball-reference.com/leagues/MLB/2019.shtml), one of the leading sites on the internet for historical professional baseball data.)
+
+```{r}
+
+mlb_pay_wl <- read_csv("mlb_pay_wl.csv")
+
+```
+
+This file has a record (observation) for each of the Major League Baseball (MLB) teams for the seasons 1999 through 2019. This is 630 rows of data. 
+
+For each team season, the file has 
+
+* the attendance per game ("attend_g")
+
+* the estimated payroll ("est_payroll")
+
+* the pay as a percent of the league ("pay_pct_league"), where 1.0 is the league average for that year. A value of 1.10 would be 10 percent higher than the league average for the season; a value of 0.90 would be 10 percent lower.
+
+* wins and losses ("w" and "l")
+
+* and the winning percentage ("w_l_percent") where 0.500 represents winning as many games as losing. The highest value in this period was the Seattle Mariners, whose win-loss "percentage" was 0.716 (71.6%) in 2001 (116 of 162 games). The worst team was Detroit Tigers in 2003, who _lost_ 119 of their 162 games (a percentage of 0.265).
+
+
+
+For our exercise, we will explore the relationship between payroll and wins. Does paying star players always lead to success? 
+
+First, let's create a scatterplot to visualize the relationship. We will put payroll on the X axis, and win-loss percent on the Y.
+
+```{r}
+
+ggplot(mlb_pay_wl, aes(x = pay_pct_league, y = w_l_percent)) + 
+  geom_point()
+
+```
+
+To help us navigate this, in the plot below there are two red lines on the plot. One runs vertically at the "1" point on the X axis. The teams to the left of the line spent below the league average for that season; the teams to the right spent more. As you can see, there have been cases when some teams spent twice as much as the league average.
+
+The second line runs horizontally at the "0.5" point on the Y axis. Above this line, the teams won more games than they lost. Below the line, they lost more games than they won.
+
+
+
+```{r}
+
+ggplot(mlb_pay_wl, aes(x = pay_pct_league, y = w_l_percent)) + 
+  geom_point() +
+  geom_vline(xintercept  = 1, colour = "red", size = 2) +
+  geom_hline(yintercept = 0.5, colour = "red", size = 2)
+
+```
+
+Of the 630 team-seasons represented, there seems to be more high payroll teams in the top right quadrant (high payroll plus winning season) than bottom right (high payroll plus losing season). By contrast, there might be a few more low payroll teams with losing seasons than low payroll teams with winning seasons.
+
+Let's use our regression modeling skills to see if there's a consistent relationship with paying lots of star players lots of money, and winning lots of games.
+
+First, we can visualize the relationship using the `geom_smooth(method = lm)` function. The "method = lm" part refers to a linear model—that is to say, a regression model.
+
+```{r}
+
+ggplot(mlb_pay_wl, aes(x = pay_pct_league, y = w_l_percent)) + 
+  geom_point() +
+  geom_smooth(method = lm)
+
+```
+
+We can use the lm method to create our regression statistics.
+
+```{r}
+
+model_mlb_pay_wl <- lm(w_l_percent ~ pay_pct_league, data = mlb_pay_wl)
+
+model_mlb_pay_wl
+
+```
+The regression equation is the same as an equation for defining a line in Cartesian geometry:
+
+$y = b_{0} + b_{1}x_{1} + e$
+
+How to read this:
+
+* the value of `y` (i.e. the point on the `y` axis) can be predicted by
+
+* the intercept value `b_{0}`, plus
+
+* the coefficient `b_{1}` times the value of `x`
+
+The distance between that predicted point and the actual point is the error term.
+
+
+The equation calculated by the `lm()` function above means that any predicted value of `y` (that is, a point on the line) is equal to 0.422110 + 0.077875 * the value of `x`.
+
+If `x` = 1.5, then `y` = 0.422110 + (0.077875 * 1.5), which is 0.5389225. Look back at the line of best fit—if `x` = 1.5, the `y` point on the line is just above the 0.5. 
+
+Or another way to think about it: in a 162 game season, a team spending 50% more on payroll than the league average can expect to win 87 games (where 81 is 0.500).
+
+
+
+We can get more details from the statistical model by using the `summary()` function, including the P value and the R-squared value:
+
+```{r}
+
+summary(model_mlb_pay_wl)
+
+```
+
+### Questions
+
+1. Is this model statistically significant? What is the P value?
+
+2. What is the R-squared value? What does it tell us about the strength of the relationship between these two variables?
+
+3. What is the relationship between the R-squared value and the P value?  (Further reading: https://blog.minitab.com/en/adventures-in-statistics-2/how-to-interpret-a-regression-model-with-low-r-squared-and-low-p-values#:~:text=In%20regression%20analysis%2C%20you'd,lot%20of%20the%20response%20variability.)
+
+4. If you were managing the budget of a MLB team, would you feel confident telling the shareholders that spending money on star players would turn into success on the field?
+
+5. Create a regression model that evaluates the relationship between team wins and attendance. Does a successful team draw bigger crowds?
+
+-30-
